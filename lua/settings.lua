@@ -7,9 +7,6 @@ local M = {}
 M.loader = "lazy"
 
 --- Plugin download source: "auto" | "nix" | "traditional"
---- - "auto": Detects automatically if Nix is present
---- - "nix": Resolves all plugin store paths from Nix environment
---- - "traditional": Uses standard git cloning / plugin manager downloads
 M.plugin_source = "auto"
 
 --- Global log level: "TRACE" | "DEBUG" | "INFO" | "WARN" | "ERROR"
@@ -17,6 +14,12 @@ M.log_level = "INFO"
 
 --- Enforce strict metatable locking on configuration tables
 M.strict_mode = true
+
+--- Formatting & Tooling Toggles
+M.format_on_save = true        -- Automatically format buffers on save
+M.auto_attach_lsp = true       -- Dynamically attach LSPs found on $PATH
+M.auto_attach_formatter = true -- Dynamically attach formatters found on $PATH
+M.auto_attach_linter = true    -- Dynamically attach linters found on $PATH
 
 --- Active Modules List (Control plane toggles)
 M.modules = {
@@ -26,6 +29,8 @@ M.modules = {
   colorscheme = true,
   treesitter  = true,
   lsp         = true,
+  formatter   = true,
+  linter      = true,
   telescope   = true,
 }
 

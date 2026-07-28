@@ -1,21 +1,18 @@
---- Meta System & Global Bundle Table Initializer
---- Establishes system context, strict metatable encapsulation, and global Bundle.
-
-local metatable_util = require("library.metatable")
-local logger = require("library.logger")
-local dag_lib = require("library.dag")
-local loader_adapter = require("library.loader_adapter")
-
 local meta = {}
 
 -- Setup Runtime Path and package.path for standalone / WIP initialization
 local current_file = debug.getinfo(1, "S").source:sub(2)
-local root_dir = vim.fn.fnamemodify(current_file, ":p:h")
+local root_dir = vim.fn.fnamemodify(current_file, ":p:h:h")
 if not vim.tbl_contains(vim.opt.rtp:get(), root_dir) then
   vim.opt.rtp:prepend(root_dir)
 end
 local lua_path = root_dir .. "/lua/?.lua;" .. root_dir .. "/lua/?/init.lua;" .. root_dir .. "/?.lua;" .. root_dir .. "/?/init.lua;"
 package.path = lua_path .. package.path
+
+local metatable_util = require("library.metatable")
+local logger = require("library.logger")
+local dag_lib = require("library.dag")
+local loader_adapter = require("library.loader_adapter")
 
 -- Environment Detection
 meta.is_nix = vim.g.nix_info_plugin_name ~= nil or os.getenv("NIX_STORE") ~= nil
@@ -24,15 +21,29 @@ meta.strict_table = metatable_util.strict_table
 meta.seal = metatable_util.seal
 
 -- Nix compatibility setup
-if meta.is_nix then
-  local ok, _ = pcall(require, vim.g.nix_info_plugin_name or "nixInfo")
-  if not ok and vim.g.nix_info_plugin_name then
-    package.loaded[vim.g.nix_info_plugin_name] = setmetatable({}, {
-      __call = function(_, default) return default end
-    })
+if vim.g.nix_info_plugin_name then
+  local ok, nix_mod = pcall(require, vim.g.nix_info_plugin_name)
+  if ok then
+    _G.nixInfo = nix_mod
   end
-  _G.nixInfo = _G.nixInfo or {}
-  _G.nixInfo.isNix = true
+end
+
+if not _G.nixInfo then
+  _G.nixInfo = setmetatable({}, {
+    __call = function(_, default) return default end
+  })
+end
+
+_G.nixInfo.isNix = vim.g.nix_info_plugin_name ~= nil or os.getenv("NIX_STORE") ~= nil
+
+function _G.nixInfo.get_nix_plugin_path(name)
+  if type(_G.nixInfo) == "function" or getmetatable(_G.nixInfo) then
+    local path = _G.nixInfo(nil, "plugins", "lazy", name)
+              or _G.nixInfo(nil, "plugins", "start", name)
+              or _G.nixInfo(nil, "plugins", "specs", name)
+    if path then return path end
+  end
+  return nil
 end
 
 --- Bundle Table Construction

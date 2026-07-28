@@ -8,6 +8,7 @@ return {
   specs = {
     {
       name = "catppuccin/nvim",
+      nix_name = "catppuccin-nvim",
       id = "catppuccin",
       lazy = false,
       priority = 1000,

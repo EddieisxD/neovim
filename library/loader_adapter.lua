@@ -25,22 +25,36 @@ end
 ---@param plugin_name string
 ---@return string|nil
 function M.resolve_nix_path(plugin_name)
+  local name_variants = {
+    plugin_name,
+    plugin_name:gsub("%.nvim$", ""),
+    plugin_name:gsub("%-nvim$", ""),
+    plugin_name .. "-nvim",
+    (plugin_name:gsub("%-", ".")),
+  }
+
   -- 1. Check nixInfo global standard
   if _G.nixInfo and type(_G.nixInfo.get_nix_plugin_path) == "function" then
-    local path = _G.nixInfo.get_nix_plugin_path(plugin_name)
-    if path then return path end
+    for _, var in ipairs(name_variants) do
+      local path = _G.nixInfo.get_nix_plugin_path(var)
+      if path then return path end
+    end
   end
 
   -- 2. Check global nix_plugin_dir option
   if vim.g.nix_plugin_dir then
-    local path = vim.g.nix_plugin_dir .. "/" .. plugin_name
-    if vim.fn.isdirectory(path) == 1 then return path end
+    for _, var in ipairs(name_variants) do
+      local path = vim.g.nix_plugin_dir .. "/" .. var
+      if vim.fn.isdirectory(path) == 1 then return path end
+    end
   end
 
   -- 3. Check Neovim RTP for pre-loaded Nix store plugins
-  local matches = vim.api.nvim_get_runtime_file("pack/*/*/" .. plugin_name, false)
-  if #matches > 0 then
-    return matches[1]
+  for _, var in ipairs(name_variants) do
+    local matches = vim.api.nvim_get_runtime_file("pack/*/*/" .. var, false)
+    if #matches > 0 then
+      return matches[1]
+    end
   end
 
   return nil

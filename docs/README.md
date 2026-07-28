@@ -46,7 +46,6 @@ Welcome to the documentation for the **Modular DAG-based Neovim Configuration En
 ```
 .
 ├── init.lua                   # Main entry point
-├── meta.lua                   # Global Bundle initializer & path environment setup
 ├── docs/                      # Complete system documentation
 ├── library/
 │   ├── metatable.lua          # Encapsulation & strict table guards
@@ -54,6 +53,7 @@ Welcome to the documentation for the **Modular DAG-based Neovim Configuration En
 │   ├── dag.lua                # DAG graph solver & topological sorter
 │   └── loader_adapter.lua     # Universal plugin spec converter for Lazy / Lze
 └── lua/
+    ├── meta.lua               # Global Bundle initializer & path environment setup
     ├── settings.lua           # Control plane settings
     └── modules/
         ├── init.lua           # Dynamic file scanner & module auto-loader

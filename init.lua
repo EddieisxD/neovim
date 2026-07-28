@@ -6,7 +6,14 @@ if vim.loader then
   vim.loader.enable()
 end
 
--- 1. Load meta.lua to initialize system context and global Bundle table
+-- Ensure root configuration directory is on runtimepath
+local current_file = debug.getinfo(1, "S").source:sub(2)
+local root_dir = vim.fn.fnamemodify(current_file, ":p:h")
+if not vim.tbl_contains(vim.opt.rtp:get(), root_dir) then
+  vim.opt.rtp:prepend(root_dir)
+end
+
+-- 1. Load meta.lua (located in lua/meta.lua)
 local Bundle = require("meta")
 
 -- 2. Load Control Plane Settings from lua/settings.lua
