@@ -28,7 +28,7 @@
 
 ### 7. Core UI & Developer Workflows
 - **Telescope**: Customized layout (Bottom prompt bar with 30% Fuzzy Results / 70% Preview split) + `live_grep` ripgrep integration.
-- **Blink.cmp**: Super-tab preset completion unblocking Insert-mode `<Tab>` indentation.
+- **Blink.cmp**: Super-tab preset completion unblocking Insert-mode `<Tab>` indentation + self-healing native build step for Blink V2.
 - **Lualine**: Dynamic statusbar displaying active LSPs, Formatters, and Linters.
 - **Fidget.nvim**: Smooth, unthrottled LSP progress and notification UI.
 - **All-or-Nothing Transparency Engine**: `:ToggleTransparency` and `:ApplyTransparency` commands that automatically re-apply over colorschemes while respecting persistent state.
@@ -42,6 +42,7 @@
 
 The following items are planned for future integration into our modular DAG system:
 
+- [ ] **Dynamic Colorscheme Lazy-Loading Optimization**: Evaluate dynamic lazy-loading of non-active themes vs eager loading all colorschemes at boot.
 - [ ] **Nix-backed `lazy.nvim` Hybrid Mode**: Support passing Nix store plugin paths directly into `lazy.nvim` (via `dir = "/nix/store/..."` or Nix wrappers) so `lazy.nvim` UI can be used even when plugins are supplied by Nix flakes.
 - [ ] **Dynamic `render-markdown.nvim` Palette per Colorscheme**: Automatically adjust Markdown heading and code block highlight colors based on the active colorscheme in `Bundle.state.colorscheme`.
 - [ ] **Bufferline / Tabline**: Modern tab/buffer bar integration.
