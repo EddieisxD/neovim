@@ -68,11 +68,21 @@ return {
             local language = (vim.treesitter.language and vim.treesitter.language.get_lang and vim.treesitter.language.get_lang(filetype)) or filetype
 
             if not treesitter_try_attach(buf, language) then
-              if ok_ts_mod and vim.tbl_contains(installable_parsers, language) and type(ts_mod.install) == "function" then
+              -- Check if a C compiler or tree-sitter CLI is available before attempting install
+              local has_compiler = (vim.fn.executable("tree-sitter") == 1)
+                or (vim.fn.executable("cc") == 1)
+                or (vim.fn.executable("gcc") == 1)
+                or (vim.fn.executable("clang") == 1)
+                or (vim.fn.executable("zig") == 1)
+
+              if has_compiler and ok_ts_mod and vim.tbl_contains(installable_parsers, language) and type(ts_mod.install) == "function" then
                 pcall(function()
-                  ts_mod.install(language):await(function()
-                    treesitter_try_attach(buf, language)
-                  end)
+                  local install_task = ts_mod.install(language)
+                  if install_task and type(install_task.await) == "function" then
+                    install_task:await(function()
+                      treesitter_try_attach(buf, language)
+                    end)
+                  end
                 end)
               end
             end
