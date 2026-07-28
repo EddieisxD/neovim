@@ -68,14 +68,10 @@ return {
             local language = (vim.treesitter.language and vim.treesitter.language.get_lang and vim.treesitter.language.get_lang(filetype)) or filetype
 
             if not treesitter_try_attach(buf, language) then
-              -- Check if a C compiler or tree-sitter CLI is available before attempting install
-              local has_compiler = (vim.fn.executable("tree-sitter") == 1)
-                or (vim.fn.executable("cc") == 1)
-                or (vim.fn.executable("gcc") == 1)
-                or (vim.fn.executable("clang") == 1)
-                or (vim.fn.executable("zig") == 1)
+              -- Strict check for tree-sitter CLI executable
+              local has_ts_cli = (vim.fn.executable("tree-sitter") == 1)
 
-              if has_compiler and ok_ts_mod and vim.tbl_contains(installable_parsers, language) and type(ts_mod.install) == "function" then
+              if has_ts_cli and ok_ts_mod and vim.tbl_contains(installable_parsers, language) and type(ts_mod.install) == "function" then
                 pcall(function()
                   local install_task = ts_mod.install(language)
                   if install_task and type(install_task.await) == "function" then
@@ -84,6 +80,11 @@ return {
                     end)
                   end
                 end)
+              elseif not has_ts_cli then
+                vim.notify_once(
+                  string.format("Treesitter parser for '%s' is not installed. Install 'tree-sitter-cli' to enable auto-installation.", language),
+                  vim.log.levels.WARN
+                )
               end
             end
           end,
