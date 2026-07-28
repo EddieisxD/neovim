@@ -1,4 +1,4 @@
---- Fidget UI Module (Sourced from ~/.config/nvim/lua/plugins/fidget.lua)
+--- Fidget UI Module
 local dag_lib = require("library.dag")
 
 return {
@@ -12,7 +12,6 @@ return {
       event = "LspAttach",
       opts = {
         notification = {
-          poll_rate = 1,
           window = {
             winblend = 0,
             normal_hl = "Comment",

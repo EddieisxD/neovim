@@ -26,19 +26,21 @@ M.auto_attach_linter = true    -- Dynamically attach linters found on $PATH
 
 --- Active Modules List (Control plane toggles)
 M.modules = {
-  options      = true,
-  keymaps      = true,
-  autocmds     = true,
-  colorscheme  = true,
-  transparency = true,
-  treesitter   = true,
-  lsp          = true,
-  formatter    = true,
-  linter       = true,
-  telescope    = true,
-  blink_cmp    = true,
-  file_explorer= true,
+  options         = true,
+  keymaps         = true,
+  autocmds        = true,
+  colorscheme     = true,
+  transparency    = true,
+  treesitter      = true,
+  lsp             = true,
+  formatter       = true,
+  linter          = true,
+  telescope       = true,
+  blink_cmp       = true,
+  file_explorer   = true,
   render_markdown = true,
+  lualine         = true,
+  fidget          = true,
 }
 
 return M
