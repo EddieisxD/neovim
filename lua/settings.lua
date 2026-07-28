@@ -41,6 +41,7 @@ M.modules = {
   render_markdown = true,
   lualine         = true,
   fidget          = true,
+  mason           = true,
 }
 
 return M

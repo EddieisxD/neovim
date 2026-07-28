@@ -62,6 +62,8 @@ inputs:
     render-markdown-nvim
     fidget-nvim
     lualine-nvim
+    mason-nvim
+    mason-lspconfig-nvim
   ];
 
   options.nvim-lib.pluginsFromPrefix = lib.mkOption {

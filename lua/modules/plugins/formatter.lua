@@ -70,6 +70,11 @@ return {
   specs = {},
 
   exec = function()
+    -- Register on Bundle bridge so any component can invoke formatting without tight coupling
+    if _G.Bundle and _G.Bundle.bridge then
+      _G.Bundle.bridge.format = M.format_buffer
+    end
+
     -- Create :Format user command
     vim.api.nvim_create_user_command("Format", function()
       M.format_buffer()

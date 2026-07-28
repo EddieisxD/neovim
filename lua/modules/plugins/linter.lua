@@ -35,6 +35,11 @@ return {
   specs = {},
 
   exec = function()
+    -- Register on Bundle bridge so any component can invoke linting without tight coupling
+    if _G.Bundle and _G.Bundle.bridge then
+      _G.Bundle.bridge.lint = M.lint_buffer
+    end
+
     vim.api.nvim_create_user_command("Lint", function()
       M.lint_buffer()
     end, { desc = "Run $PATH linters on current buffer" })

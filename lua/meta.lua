@@ -58,6 +58,7 @@ local Bundle = {
   settings = {},
   modules = {},
   specs = {},
+  bridge = {}, -- Shared inter-module bridge (decoupled functional contracts)
   dag = dag_lib.new(),
   logger = logger,
   loader_adapter = loader_adapter,
