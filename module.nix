@@ -52,6 +52,10 @@ inputs:
   # General plugin specs list
   config.specs.general = with pkgs.vimPlugins; [
     catppuccin-nvim
+    oxocarbon-nvim
+    nightfox-nvim
+    kanagawa-nvim
+    gruvbox-material
     nvim-treesitter
     nvim-lspconfig
     telescope-nvim

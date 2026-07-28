@@ -1,4 +1,5 @@
---- Colorscheme Module Spec
+--- Curated Colorscheme Collection Spec
+--- Supports: catppuccin, oxocarbon, carbonfox (nightfox), kanagawa, gruvbox-material, vague, oldworld
 --- Loads active theme from Bundle.state (persisted cross-session in bundle_state.json)
 --- and automatically updates Bundle.state when changing colorschemes at runtime.
 
@@ -18,15 +19,61 @@ return {
   phase = dag_lib.Phases.PLUGINS,
   deps = { "options" },
   specs = {
+    -- Catppuccin
     {
       name = "catppuccin/nvim",
       nix_name = "catppuccin-nvim",
       id = "catppuccin",
       lazy = false,
       priority = 1000,
-      config = function()
-        apply_active_colorscheme()
-      end,
+    },
+    -- Oxocarbon
+    {
+      name = "nyoom-engineering/oxocarbon.nvim",
+      nix_name = "oxocarbon-nvim",
+      id = "oxocarbon",
+      lazy = false,
+      priority = 1000,
+    },
+    -- Nightfox / Carbonfox
+    {
+      name = "EdenEast/nightfox.nvim",
+      nix_name = "nightfox-nvim",
+      id = "nightfox",
+      lazy = false,
+      priority = 1000,
+    },
+    -- Kanagawa
+    {
+      name = "rebelot/kanagawa.nvim",
+      nix_name = "kanagawa-nvim",
+      id = "kanagawa",
+      lazy = false,
+      priority = 1000,
+    },
+    -- Gruvbox Material
+    {
+      name = "sainnhe/gruvbox-material",
+      nix_name = "gruvbox-material",
+      id = "gruvbox-material",
+      lazy = false,
+      priority = 1000,
+    },
+    -- Vague
+    {
+      name = "vague2k/vague.nvim",
+      nix_name = "vague-nvim",
+      id = "vague",
+      lazy = false,
+      priority = 1000,
+    },
+    -- Oldworld
+    {
+      name = "dgox16/oldworld.nvim",
+      nix_name = "oldworld-nvim",
+      id = "oldworld",
+      lazy = false,
+      priority = 1000,
     },
   },
   exec = function()
