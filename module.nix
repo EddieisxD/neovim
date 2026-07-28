@@ -57,7 +57,7 @@ inputs:
     kanagawa-nvim
     gruvbox-material
     vague-nvim
-    nvim-treesitter
+    nvim-treesitter.withAllGrammars
     nvim-treesitter-textobjects
     nvim-lspconfig
     telescope-nvim
