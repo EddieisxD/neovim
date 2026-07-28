@@ -14,7 +14,7 @@ function M.spec(tbl)
 
   local s = vim.deepcopy(tbl)
   s.name = s.name or s[1]
-  s.id = s.id or s.name:match("([^/]+)$"):gsub("%.nvim$", "")
+  s.id = s.id or s.name:match("([^/]+)$"):gsub("%.nvim$", ""):gsub("%.lua$", "")
   s.deps = s.deps or s.dependencies or {}
   s.enabled = s.enabled ~= false
 
@@ -27,6 +27,7 @@ end
 function M.resolve_nix_path(plugin_name)
   local name_variants = {
     plugin_name,
+    plugin_name:gsub("%.", "-"),                  -- e.g. which-key.nvim -> which-key-nvim, nvim-tree.lua -> nvim-tree-lua
     plugin_name:gsub("%.nvim$", ""),
     plugin_name:gsub("%-nvim$", ""),
     plugin_name .. "-nvim",
@@ -62,6 +63,15 @@ end
 
 local metatable_util = require("library.metatable")
 
+--- Helper to resolve require module name cleanly (e.g., blink-cmp -> blink.cmp)
+---@param s table
+---@return string
+local function get_module_require_name(s)
+  if s.module then return s.module end
+  local base = s.name:match("([^/]+)$"):gsub("%.nvim$", ""):gsub("%.lua$", "")
+  return base:gsub("%-", ".")
+end
+
 --- Adapt universal specs for Lazy.nvim
 ---@param specs table[]
 ---@param settings table
@@ -81,6 +91,7 @@ function M.to_lazy_specs(specs, settings)
         keys = s.keys,
         opts = s.opts,
         build = s.build,
+        version = s.version,
         init = s.before or s.init,
       }
 
@@ -90,15 +101,20 @@ function M.to_lazy_specs(specs, settings)
 
       if user_config or user_after or s.opts then
         lazy_spec.config = function(plugin, opts)
-          if s.opts then
-            local ok, p = pcall(require, s.id or s.name:match("([^/]+)$"))
-            if ok and p.setup then
+          -- Mutually exclusive setup: user_config takes precedence, s.opts runs only if user_config is absent
+          if type(user_config) == "function" then
+            user_config(plugin, opts or s.opts)
+          elseif s.opts then
+            local mod_name = get_module_require_name(s)
+            local ok, p = pcall(require, mod_name)
+            if not ok and s.id then
+              ok, p = pcall(require, s.id)
+            end
+            if ok and p and p.setup then
               p.setup(opts or s.opts)
             end
           end
-          if type(user_config) == "function" then
-            user_config(plugin, opts)
-          end
+
           if type(user_after) == "function" then
             user_after(plugin, opts)
           end
@@ -112,7 +128,7 @@ function M.to_lazy_specs(specs, settings)
 
       -- Nix vs Traditional adaptation
       local is_nix = (settings.plugin_source == "nix") or
-          (settings.plugin_source == "auto" and (_G.nixInfo and _G.nixInfo.isNix))
+          (settings.plugin_source == "auto" and (_G.Bundle and _G.Bundle.meta and _G.Bundle.meta.is_nix))
 
       if is_nix then
         local nix_name = s.nix_name or s.name:match("([^/]+)$")
@@ -121,7 +137,7 @@ function M.to_lazy_specs(specs, settings)
           lazy_spec.dir = nix_path
           logger.debug(string.format("[Lazy Adapter] Resolved Nix path for '%s' -> '%s'", s.name, nix_path))
         else
-          logger.warn(string.format("[Lazy Adapter] Nix path not found for '%s', relying on Lazy fallback", s.name))
+          logger.info(string.format("[Lazy Adapter] Nix path not found for '%s', relying on Lazy fallback", s.name))
         end
       end
 
@@ -148,6 +164,7 @@ function M.to_lze_specs(specs, settings)
         event = s.event,
         ft = s.ft,
         keys = s.keys,
+        build = s.build,
         auto_enable = s.auto_enable,
         before = s.before or s.init,
         after = s.after or s.post,
@@ -162,21 +179,24 @@ function M.to_lze_specs(specs, settings)
       local user_config = s.config or s.load
       if user_config or s.opts then
         lze_spec.load = function(name)
-          if s.opts then
-            local ok, p = pcall(require, name)
-            if ok and p.setup then
-              p.setup(s.opts)
-            end
-          end
           if type(user_config) == "function" then
             user_config(name)
+          elseif s.opts then
+            local mod_name = get_module_require_name(s)
+            local ok, p = pcall(require, mod_name)
+            if not ok then
+              ok, p = pcall(require, name)
+            end
+            if ok and p and p.setup then
+              p.setup(s.opts)
+            end
           end
         end
       end
 
       -- Nix path override for Lze
       local is_nix = (settings.plugin_source == "nix") or
-          (settings.plugin_source == "auto" and (_G.nixInfo and _G.nixInfo.isNix))
+          (settings.plugin_source == "auto" and (_G.Bundle and _G.Bundle.meta and _G.Bundle.meta.is_nix))
 
       if is_nix then
         local nix_name = s.nix_name or s.name:match("([^/]+)$")
@@ -200,11 +220,14 @@ end
 function M.setup_loader(loader_type, specs, settings)
   logger.info(string.format("[Loader Adapter] Initializing loader: '%s' (Source: '%s')", loader_type, settings.plugin_source))
 
+  local is_nix = (settings.plugin_source == "nix") or
+      (settings.plugin_source == "auto" and (_G.Bundle and _G.Bundle.meta and _G.Bundle.meta.is_nix))
+
   if loader_type == "lazy" then
     local lazy_specs = M.to_lazy_specs(specs, settings)
     local lazy_path = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
-    if not (vim.uv or vim.loop).fs_stat(lazy_path) and settings.plugin_source == "traditional" then
+    if not (vim.uv or vim.loop).fs_stat(lazy_path) and not is_nix then
       logger.info("[Lazy Adapter] Bootstrapping lazy.nvim repository...")
       local out = vim.fn.system({
         "git", "clone", "--filter=blob:none", "--branch=stable",
