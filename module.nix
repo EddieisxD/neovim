@@ -56,6 +56,7 @@ inputs:
     nightfox-nvim
     kanagawa-nvim
     gruvbox-material
+    vague-nvim
     nvim-treesitter
     nvim-lspconfig
     telescope-nvim
