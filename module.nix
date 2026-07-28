@@ -58,6 +58,7 @@ inputs:
     gruvbox-material
     vague-nvim
     nvim-treesitter
+    nvim-treesitter-textobjects
     nvim-lspconfig
     telescope-nvim
     plenary-nvim
