@@ -1,4 +1,6 @@
 --- Blink Completion Spec
+--- Integrates super-tab preset and adds native build step for blink.cmp V2.
+
 local dag_lib = require("library.dag")
 
 return {
@@ -9,7 +11,12 @@ return {
     {
       name = "Saghen/blink.cmp",
       id = "blink-cmp",
+      deps = { "saghen/blink.lib", "rafamadriz/friendly-snippets" },
+      version = "*",
       event = "InsertEnter",
+      build = function()
+        require("blink.cmp").build():pwait()
+      end,
 
       -- Explicit keys for manual trigger & docs scrolling without blocking insert-mode <Tab>
       keys = {

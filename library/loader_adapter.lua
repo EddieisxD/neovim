@@ -80,6 +80,7 @@ function M.to_lazy_specs(specs, settings)
         ft = s.ft,
         keys = s.keys,
         opts = s.opts,
+        build = s.build,
         init = s.before or s.init,
       }
 
