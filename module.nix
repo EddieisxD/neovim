@@ -60,6 +60,7 @@ inputs:
     nvim-tree-lua
     nvim-web-devicons
     render-markdown-nvim
+    fidget-nvim
   ];
 
   options.nvim-lib.pluginsFromPrefix = lib.mkOption {
