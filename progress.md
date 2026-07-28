@@ -42,6 +42,7 @@
 
 The following items are planned for future integration into our modular DAG system:
 
+- [ ] **Nix-backed `lazy.nvim` Hybrid Mode**: Support passing Nix store plugin paths directly into `lazy.nvim` (via `dir = "/nix/store/..."` or Nix wrappers) so `lazy.nvim` UI can be used even when plugins are supplied by Nix flakes.
 - [ ] **Dynamic `render-markdown.nvim` Palette per Colorscheme**: Automatically adjust Markdown heading and code block highlight colors based on the active colorscheme in `Bundle.state.colorscheme`.
 - [ ] **Bufferline / Tabline**: Modern tab/buffer bar integration.
 - [ ] **`nvim-persistence`**: Session management to save and restore open buffers, layouts, and cursor positions.
