@@ -85,6 +85,7 @@ function M.to_lazy_specs(specs, settings)
       local lazy_spec = {
         s.name,
         lazy = s.lazy,
+        priority = s.priority,
         cmd = s.cmd,
         event = s.event,
         ft = s.ft,
@@ -92,6 +93,7 @@ function M.to_lazy_specs(specs, settings)
         opts = s.opts,
         build = s.build,
         version = s.version,
+        colorscheme = s.colorschemes or s.colorscheme,
         init = s.before or s.init,
       }
 
@@ -165,6 +167,8 @@ function M.to_lze_specs(specs, settings)
         ft = s.ft,
         keys = s.keys,
         build = s.build,
+        priority = s.priority,
+        colorscheme = s.colorschemes or s.colorscheme,
         auto_enable = s.auto_enable,
         before = s.before or s.init,
         after = s.after or s.post,
