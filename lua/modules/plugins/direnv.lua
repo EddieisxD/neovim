@@ -1,21 +1,27 @@
 --- Direnv Integration Module Spec
---- Automatically exports environment variables from direnv / nix-direnv into Neovim's vim.env
---- with non-blocking Fidget progress notifications and strict DAG modular isolation.
+--- Automatically exports environment variables from direnv / nix-direnv into Neovim's process environment block (vim.fn.setenv & vim.env)
+--- with target buffer directory resolution, Fidget progress notifications, and strict atomic isolation.
 
 local dag_lib = require("library.dag")
 
 local function sync_direnv(opts)
-  opts = opts or {}
   if vim.fn.executable("direnv") ~= 1 then return end
 
-  -- Only trigger if an .envrc or .env file exists in current directory or ancestor tree
-  local env_file = vim.fn.findfile(".envrc", ".;")
+  -- Determine target directory from active buffer path or current working directory
+  local buf_path = vim.api.nvim_buf_get_name(0)
+  local target_dir = (buf_path ~= "" and vim.fn.fnamemodify(buf_path, ":p:h")) or vim.fn.getcwd()
+
+  -- Search for .envrc or .env file in target_dir or any of its parent directories
+  local env_file = vim.fn.findfile(".envrc", target_dir .. ";")
   if env_file == "" then
-    env_file = vim.fn.findfile(".env", ".;")
+    env_file = vim.fn.findfile(".env", target_dir .. ";")
   end
   if env_file == "" then return end
 
-  -- Optionally create Fidget progress notification if Fidget is available
+  -- Resolve actual directory containing the .envrc
+  local env_dir = vim.fn.fnamemodify(env_file, ":p:h")
+
+  -- Create Fidget progress notification if Fidget is available
   local ok_fidget, fidget = pcall(require, "fidget")
   local progress_handle = nil
   if ok_fidget and fidget.progress and type(fidget.progress.handle) == "table" and type(fidget.progress.handle.create) == "function" then
@@ -29,7 +35,7 @@ local function sync_direnv(opts)
   end
 
   local ok_sys, res = pcall(function()
-    return vim.system({ "direnv", "export", "json" }):wait()
+    return vim.system({ "direnv", "export", "json" }, { cwd = env_dir }):wait()
   end)
 
   local synced_count = 0
@@ -39,6 +45,7 @@ local function sync_direnv(opts)
       for k, v in pairs(env_vars) do
         if type(k) == "string" and type(v) == "string" then
           vim.env[k] = v
+          vim.fn.setenv(k, v)
           synced_count = synced_count + 1
         end
       end
@@ -70,19 +77,19 @@ return {
       lazy = false,
       priority = 100,
       config = function()
-        sync_direnv({ verbose = false })
+        sync_direnv()
 
         local augroup = vim.api.nvim_create_augroup("DAGDirenvSync", { clear = true })
         vim.api.nvim_create_autocmd({ "VimEnter", "BufEnter", "DirChanged" }, {
           group = augroup,
           callback = function()
-            sync_direnv({ verbose = false })
+            sync_direnv()
           end,
         })
       end,
     },
   },
   exec = function()
-    sync_direnv({ verbose = false })
+    sync_direnv()
   end,
 }
