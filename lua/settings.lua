@@ -18,11 +18,12 @@ M.strict_mode = true
 --- Transparency Toggle (Default State)
 M.transparent = true           -- Enable/disable full UI transparency
 
---- Formatting & Tooling Toggles
-M.format_on_save = true        -- Automatically format buffers on save
+--- Formatting & Tooling Toggles (Detached Mode)
+M.format_on_save = false       -- Format on save detached by default (saving is a separate action)
 M.auto_attach_lsp = true       -- Dynamically attach LSPs found on $PATH
-M.auto_attach_formatter = true -- Dynamically attach formatters found on $PATH
-M.auto_attach_linter = true    -- Dynamically attach linters found on $PATH
+M.auto_attach_formatter = false -- Detached formatter toggle
+M.auto_attach_linter = false    -- Detached linter toggle
+M.auto_attach_dap = false       -- Detached DAP debugger toggle
 
 --- Active Modules List (Control plane toggles)
 M.modules = {

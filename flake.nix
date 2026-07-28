@@ -1,4 +1,3 @@
-
 {
   description = "Flake exporting a configured neovim package";
   inputs = {
@@ -11,9 +10,12 @@
     url = "github:BirdeeHub/lze";
     flake = false;
   };
-  # These 2 are already in nixpkgs, however this ensures you always fetch the most up to date version!
   inputs.plugins-lzextras = {
     url = "github:BirdeeHub/lzextras";
+    flake = false;
+  };
+  inputs.plugins-direnv-nvim = {
+    url = "github:NotAShelf/direnv.nvim";
     flake = false;
   };
   outputs =

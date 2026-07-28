@@ -60,7 +60,7 @@ inputs:
     vague-nvim
     nvim-treesitter.withAllGrammars
     nvim-treesitter-textobjects
-    direnv-vim
+    config.nvim-lib.neovimPlugins.direnv-nvim
     nvim-lspconfig
     telescope-nvim
     plenary-nvim
