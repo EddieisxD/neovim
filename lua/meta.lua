@@ -9,6 +9,12 @@ end
 local lua_path = root_dir .. "/lua/?.lua;" .. root_dir .. "/lua/?/init.lua;" .. root_dir .. "/?.lua;" .. root_dir .. "/?/init.lua;"
 package.path = lua_path .. package.path
 
+-- Prepend Mason binary directory to PATH if it exists (Mason fallback in traditional mode)
+local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
+if vim.fn.isdirectory(mason_bin) == 1 and not vim.env.PATH:find(mason_bin, 1, true) then
+  vim.env.PATH = mason_bin .. ":" .. vim.env.PATH
+end
+
 local metatable_util = require("library.metatable")
 local logger = require("library.logger")
 local dag_lib = require("library.dag")

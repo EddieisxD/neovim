@@ -29,6 +29,7 @@ return {
     opt.numberwidth = 4
     opt.signcolumn = "yes"
     opt.foldcolumn = "1"
+    opt.fillchars:append({ eob = " " })
 
     o.formatoptions = "jcroql"
 
