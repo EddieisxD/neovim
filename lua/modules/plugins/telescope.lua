@@ -1,5 +1,5 @@
 --- Telescope Module Spec
---- Custom layout: Bottom prompt bar with 30% Fuzzy Results / 70% Preview split.
+--- Features custom 30/70 preview layout and Doom Emacs M-x command palette picker.
 
 local dag_lib = require("library.dag")
 
@@ -14,8 +14,10 @@ return {
       deps = { "nvim-lua/plenary.nvim" },
       cmd = "Telescope",
 
-      -- Telescope Keybindings declared directly in spec
+      -- Telescope Keybindings & Doom Emacs M-x command palette
       keys = {
+        { "<A-x>",      "<cmd>Telescope commands<cr>",   desc = "Doom Emacs M-x Command Palette" },
+        { "<leader>x",  "<cmd>Telescope commands<cr>",   desc = "Command Palette (M-x)" },
         { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
         { "<leader>fw", "<cmd>Telescope live_grep<cr>",  desc = "Live Grep" },
         { "<leader>fg", "<cmd>Telescope live_grep<cr>",  desc = "Live Grep" },

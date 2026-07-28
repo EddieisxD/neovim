@@ -68,6 +68,8 @@ inputs:
     lualine-nvim
     mason-nvim
     mason-lspconfig-nvim
+    nvim-autopairs
+    which-key-nvim
   ];
 
   options.nvim-lib.pluginsFromPrefix = lib.mkOption {

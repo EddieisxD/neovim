@@ -42,6 +42,8 @@ M.modules = {
   lualine         = true,
   fidget          = true,
   mason           = true,
+  autopairs       = true,
+  which_key       = true,
 }
 
 return M
