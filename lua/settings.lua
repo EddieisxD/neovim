@@ -32,6 +32,7 @@ M.modules = {
   colorscheme     = true,
   transparency    = true,
   treesitter      = true,
+  direnv          = true,
   lsp             = true,
   formatter       = true,
   linter          = true,

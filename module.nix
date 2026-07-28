@@ -42,7 +42,8 @@ inputs:
     shellcheck
     statix
 
-    # Utilities
+    # Environment & Utilities
+    direnv
     ripgrep
     fd
     git
@@ -59,6 +60,7 @@ inputs:
     vague-nvim
     nvim-treesitter.withAllGrammars
     nvim-treesitter-textobjects
+    direnv-vim
     nvim-lspconfig
     telescope-nvim
     plenary-nvim
