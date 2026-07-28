@@ -1,5 +1,5 @@
 --- Blink Completion Spec
---- Integrates super-tab preset and adds native build step for blink.cmp V2.
+--- Integrates super-tab preset and self-healing native build step for blink.cmp V2.
 
 local dag_lib = require("library.dag")
 
@@ -38,6 +38,14 @@ return {
       },
 
       config = function(_, opts)
+        -- Self-healing fallback: trigger build automatically if native library is missing
+        if not pcall(require, "blink.lib") then
+          local ok_b, blink = pcall(require, "blink.cmp")
+          if ok_b and type(blink.build) == "function" then
+            pcall(function() blink.build():pwait() end)
+          end
+        end
+
         local ok, blink = pcall(require, "blink.cmp")
         if ok then
           blink.setup(opts or {})
