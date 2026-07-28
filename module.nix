@@ -56,6 +56,10 @@ inputs:
     nvim-lspconfig
     telescope-nvim
     plenary-nvim
+    blink-cmp
+    nvim-tree-lua
+    nvim-web-devicons
+    render-markdown-nvim
   ];
 
   options.nvim-lib.pluginsFromPrefix = lib.mkOption {
