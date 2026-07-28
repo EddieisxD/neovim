@@ -1,30 +1,32 @@
-# Neovim Configuration Roadmap & Progress Log
+# Neovim Configuration Roadmap & Architecture Documentation
 
-## 🚀 Accomplished Architecture & Core Features
+## 🏛️ System Philosophy & Core Architectural Principles
 
 ### 1. Functional DAG Execution Engine
 - **Engine**: Kahn's topological sorting algorithm with phase priorities (`SETUP` $\rightarrow$ `OPTIONS` $\rightarrow$ `KEYMAPS` $\rightarrow$ `AUTOCMDS` $\rightarrow$ `LOADER` $\rightarrow$ `PLUGINS` $\rightarrow$ `POST`).
-- **Safety**: Built-in circular dependency detection and step timing logs (`:DagStatus`, `:DagLog`).
+- **Safety**: Built-in circular dependency detection and microsecond timing logs (`:DagStatus`, `:DagLog`).
 
-### 2. Metatable Encapsulation & Table Sealing
+### 2. Decoupled 3-Tier Data Architecture
+- **`Bundle.settings`**: Control plane preferences ingested from [`lua/settings.lua`](file:///home/addy/.config/nvim/lua/settings.lua).
+- **`Bundle.defaults`**: Sealed default fallback options and color palettes.
+- **`Bundle.state`**: Live runtime memory and NvChad-style persistent storage (`~/.local/state/nvim/bundle_state.json`).
+- **Single Dependency Rule**: Modules do not import each other directly; they communicate exclusively through `Bundle.state` and `Bundle.defaults`.
+
+### 3. Metatable Encapsulation & Table Sealing
 - `strict_table` and `seal` metatable guards prevent silent global variable pollution and catch typo errors immediately.
 - `unseal()` bridge allows `Lazy.nvim` / `lze` to safely mutate spec keys without breaking configuration immutability.
 
-### 3. Pure Nix & Traditional Dual-Mode Loader Adapter
+### 4. Pure Nix & Traditional Dual-Mode Loader Adapter
 - Universal spec format supporting both `Lazy.nvim` and `lze` (Nix wrapper modules).
-- Switchable via [`lua/settings.lua`](file:///home/addy/.config/nvim.wip/lua/settings.lua) (`loader = "lazy"` or `loader = "lze"`).
+- Switchable via [`lua/settings.lua`](file:///home/addy/.config/nvim/lua/settings.lua) (`loader = "lazy"` or `loader = "lze"`).
 
-### 4. Mason-Free Environment Sourcing Engine
+### 5. Mason-Free Environment Sourcing Engine
 - Automatically scans `$PATH` (`direnv`, `nix-shell`, `nix develop`, system binaries) for active LSPs, Formatters, and Linters.
 - Zero reliance on Mason for NixOS environments, while retaining optional Mason support for non-Nix environments.
 
-### 5. NvChad-Style Cross-Session Persistent State Engine
+### 6. NvChad-Style Cross-Session Persistent State Engine
 - Persists user runtime choices (`colorscheme`, `transparent`, `number`, `relativenumber`) in `~/.local/state/nvim/bundle_state.json`.
 - Survives NixOS rebuilds without needing code modifications or flake rebuilds for UI preference changes.
-
-### 6. Decoupled `Bundle.state` & `Bundle.defaults` Architecture
-- **Single Dependency Rule**: Modules do not import each other. Modules publish live state to `Bundle.state` and read fallbacks from `Bundle.defaults`.
-- **Swappability**: Replacing any module file requires zero code changes in other modules.
 
 ### 7. Core UI & Developer Workflows
 - **Telescope**: Customized layout (Bottom prompt bar with 30% Fuzzy Results / 70% Preview split) + `live_grep` ripgrep integration.
@@ -35,6 +37,7 @@
 - **Kitty Terminal Integration**: Automatic window padding removal on `UIEnter` / `VimEnter` via Kitty remote control (`kitty @ set-spacing padding=0`).
 - **Clean Gutter**: Removed end-of-buffer `~` tildes via `fillchars`.
 - **Curated Theme Collection**: Catppuccin, Oxocarbon, Carbonfox (Nightfox), Kanagawa, Gruvbox-Material, Vague, and Oldworld.
+- **Theme Autocompletion Commands**: Custom `:Colorscheme` and `:Theme` commands with full tab-completion across all 20 installed theme variants.
 
 ---
 
