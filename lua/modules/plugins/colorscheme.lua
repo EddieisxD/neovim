@@ -112,6 +112,44 @@ return {
   exec = function()
     apply_active_colorscheme()
 
+    -- Complete list of all installed theme variants for tab-autocompletion
+    local all_installed_themes = {}
+    for theme, _ in pairs(theme_to_plugin) do
+      table.insert(all_installed_themes, theme)
+    end
+    table.sort(all_installed_themes)
+
+    local function colorscheme_complete(arg_lead, _, _)
+      local matches = {}
+      local lead = arg_lead:lower()
+      for _, theme in ipairs(all_installed_themes) do
+        if theme:lower():find(lead, 1, true) then
+          table.insert(matches, theme)
+        end
+      end
+      return matches
+    end
+
+    -- Create user commands :Colorscheme and :Theme with custom completion across all themes
+    local cmd_opts = {
+      nargs = 1,
+      complete = colorscheme_complete,
+      desc = "Switch colorscheme with complete autocompletion across all installed theme variants",
+    }
+
+    local function handle_cmd(opts)
+      local choice = opts.args
+      if choice and #choice > 0 then
+        local ok, err = pcall(vim.cmd.colorscheme, choice)
+        if not ok then
+          vim.notify("Failed to set colorscheme: " .. tostring(err), vim.log.levels.ERROR)
+        end
+      end
+    end
+
+    vim.api.nvim_create_user_command("Colorscheme", handle_cmd, cmd_opts)
+    vim.api.nvim_create_user_command("Theme", handle_cmd, cmd_opts)
+
     -- Automatically listen to ColorScheme events to update Bundle.state & persist to disk
     local augroup = vim.api.nvim_create_augroup("DAGColorSchemeState", { clear = true })
     vim.api.nvim_create_autocmd("ColorScheme", {
