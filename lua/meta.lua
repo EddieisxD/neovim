@@ -56,15 +56,91 @@ end
 local Bundle = {
   meta = meta,
   settings = {},
+  defaults = {
+    colorscheme = "catppuccin-mocha",
+    transparent = true,
+    number = true,
+    relativenumber = true,
+    render_markdown = {
+      code_bg = "none",
+      h1 = { fg = "#ff6b6b", bg = "#1a1111" },
+      h2 = { fg = "#ffa94d", bg = "#1a1510" },
+      h3 = { fg = "#ffd43b", bg = "#1a1a10" },
+      h4 = { fg = "#69db7c", bg = "#101a10" },
+      h5 = { fg = "#74c0fc", bg = "#10101a" },
+      h6 = { fg = "#da77f2", bg = "#15101a" },
+    },
+  },
+  state = {
+    active_lsps = {},
+    active_formatters = {},
+    active_linters = {},
+  },
   modules = {},
   specs = {},
-  bridge = {}, -- Shared inter-module bridge (decoupled functional contracts)
   dag = dag_lib.new(),
   logger = logger,
   loader_adapter = loader_adapter,
   _initialized = false,
   _sealed = false,
 }
+
+--- Get filepath for persistent runtime state
+function Bundle:get_state_filepath()
+  local state_dir = vim.fn.stdpath("state")
+  if vim.fn.isdirectory(state_dir) == 0 then
+    vim.fn.mkdir(state_dir, "p")
+  end
+  return state_dir .. "/bundle_state.json"
+end
+
+--- Load persistent runtime state from disk
+function Bundle:load_state()
+  local filepath = self:get_state_filepath()
+  local f = io.open(filepath, "r")
+  if f then
+    local content = f:read("*a")
+    f:close()
+    if content and #content > 0 then
+      local ok, decoded = pcall(vim.json.decode, content)
+      if ok and type(decoded) == "table" then
+        logger.info("[Bundle State] Successfully loaded state from " .. filepath)
+        self.state = vim.tbl_deep_extend("force", self.state or {}, decoded)
+        return
+      end
+    end
+  end
+
+  -- Initialize from defaults / settings if state file does not exist
+  logger.info("[Bundle State] State file missing. Initializing from Bundle.defaults...")
+  self.state = vim.tbl_deep_extend("force", self.state or {}, {
+    colorscheme = self.settings.colorscheme or self.defaults.colorscheme,
+    transparent = self.settings.transparent ~= false,
+    number = self.settings.number ~= false,
+    relativenumber = self.settings.relativenumber ~= false,
+  })
+  self:save_state()
+end
+
+--- Persist runtime state to disk for cross-session survival (NvChad-style state engine)
+function Bundle:save_state()
+  local filepath = self:get_state_filepath()
+  local data = {
+    colorscheme = self.state.colorscheme,
+    transparent = self.state.transparent,
+    number = self.state.number,
+    relativenumber = self.state.relativenumber,
+  }
+  local ok, encoded = pcall(vim.json.encode, data)
+  if ok then
+    local f = io.open(filepath, "w")
+    if f then
+      f:write(encoded)
+      f:close()
+      logger.debug("[Bundle State] Saved persistent state to " .. filepath)
+    end
+  end
+end
 
 --- Initialize Bundle with Control Plane Settings
 ---@param settings table
@@ -76,6 +152,9 @@ function Bundle:init(settings)
 
   logger.info("[Bundle Init] Initializing configuration bundle...")
   logger.debug("[Bundle Init] Settings: " .. vim.inspect(settings))
+
+  -- Load or initialize persistent state
+  self:load_state()
 
   self._initialized = true
   return self
@@ -132,7 +211,7 @@ function Bundle:build_dag()
   self.dag:add_node({
     id = "system.plugin_loader",
     phase = dag_lib.Phases.LOADER,
-    deps = { "options" }, -- Runs after options are set
+    deps = { "options" },
     exec = function()
       loader_adapter.setup_loader(self.settings.loader, self.specs, self.settings)
     end,

@@ -1,4 +1,7 @@
---- Options Module (Sourced from ~/.config/nvim/lua/options.lua)
+--- Options Module
+--- Reads initial settings from Bundle.state (persisted in bundle_state.json)
+--- and allows toggling line numbers / relative numbers with state auto-saving.
+
 local dag_lib = require("library.dag")
 
 return {
@@ -8,6 +11,7 @@ return {
   exec = function()
     local opt = vim.opt
     local o = vim.o
+    local state = _G.Bundle and _G.Bundle.state or {}
 
     vim.g.netrw_banner = 0
 
@@ -23,9 +27,9 @@ return {
     o.linebreak = true
     o.textwidth = 0
 
-    --- Gutter & Line Numbers
-    opt.number = true
-    opt.relativenumber = true
+    --- Gutter & Line Numbers (Loaded from persistent Bundle.state)
+    opt.number = state.number ~= false
+    opt.relativenumber = state.relativenumber ~= false
     opt.numberwidth = 4
     opt.signcolumn = "yes"
     opt.foldcolumn = "1"
@@ -91,5 +95,24 @@ return {
     vim.g.maplocalleader = " "
 
     vim.cmd("cabbrev h tab help")
+
+    -- Line Number Toggle Keybindings with State Persistence
+    vim.keymap.set("n", "<leader>n", function()
+      local cur = opt.number:get()
+      opt.number = not cur
+      if _G.Bundle then
+        _G.Bundle.state.number = not cur
+        _G.Bundle:save_state()
+      end
+    end, { desc = "Toggle line number" })
+
+    vim.keymap.set("n", "<leader>rn", function()
+      local cur = opt.relativenumber:get()
+      opt.relativenumber = not cur
+      if _G.Bundle then
+        _G.Bundle.state.relativenumber = not cur
+        _G.Bundle:save_state()
+      end
+    end, { desc = "Toggle relative number" })
   end,
 }
