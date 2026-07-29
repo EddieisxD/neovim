@@ -142,13 +142,19 @@ function Bundle:save_state()
 end
 
 --- Decoupled Notification Bridge enforcing Atomic Module Isolation
---- Routes notifications through vim.notify (intercepted by Fidget if active)
+--- Routes notifications through fidget.notify if available, or vim.notify
 function Bundle:notify(msg, level, opts)
   level = level or vim.log.levels.INFO
   if type(opts) == "string" then
     opts = { title = opts }
   end
-  vim.notify(msg, level, opts or {})
+
+  local ok_fidget, fidget = pcall(require, "fidget")
+  if ok_fidget and type(fidget.notify) == "function" then
+    pcall(fidget.notify, msg, level, opts or {})
+  else
+    vim.notify(msg, level, opts or {})
+  end
 end
 
 --- Initialize Bundle with Control Plane Settings

@@ -1,6 +1,6 @@
 --- Direnv Integration Module Spec
 --- Automatically exports environment variables from direnv / nix-direnv into Neovim's process environment block (vim.fn.setenv & vim.env)
---- on VimEnter, BufEnter, and DirChanged, with decoupled notification bridge.
+--- asynchronously on VimEnter, BufEnter, and DirChanged, keeping the Neovim UI 100% responsive.
 
 local dag_lib = require("library.dag")
 
@@ -18,33 +18,33 @@ local function sync_direnv(target_dir)
 
   local env_dir = vim.fn.fnamemodify(env_file, ":p:h")
 
-  local ok_sys, res = pcall(function()
-    return vim.system({ "direnv", "export", "json" }, { cwd = env_dir }):wait()
-  end)
-
-  local synced_count = 0
-  if ok_sys and res and res.code == 0 and res.stdout and #res.stdout > 0 then
-    local ok_json, env_vars = pcall(vim.fn.json_decode, res.stdout)
-    if ok_json and type(env_vars) == "table" then
-      for k, v in pairs(env_vars) do
-        if type(k) == "string" and type(v) == "string" then
-          vim.env[k] = v
-          vim.fn.setenv(k, v)
-          synced_count = synced_count + 1
+  -- Asynchronous non-blocking process spawn
+  vim.system({ "direnv", "export", "json" }, { cwd = env_dir }, function(res)
+    if res and res.code == 0 and res.stdout and #res.stdout > 0 then
+      vim.schedule(function()
+        local ok_json, env_vars = pcall(vim.fn.json_decode, res.stdout)
+        local synced_count = 0
+        if ok_json and type(env_vars) == "table" then
+          for k, v in pairs(env_vars) do
+            if type(k) == "string" and type(v) == "string" then
+              vim.env[k] = v
+              vim.fn.setenv(k, v)
+              synced_count = synced_count + 1
+            end
+          end
         end
-      end
-    end
-  end
 
-  -- Send notification via decoupled Bundle:notify bridge (intercepted by fidget if active)
-  if synced_count > 0 then
-    local msg = "Loaded direnv (" .. synced_count .. " vars) for " .. env_dir
-    if _G.Bundle and type(_G.Bundle.notify) == "function" then
-      _G.Bundle:notify(msg, vim.log.levels.INFO, { title = "direnv" })
-    else
-      vim.notify(msg, vim.log.levels.INFO, { title = "direnv" })
+        if synced_count > 0 then
+          local msg = "Loaded direnv (" .. synced_count .. " vars) for " .. env_dir
+          if _G.Bundle and type(_G.Bundle.notify) == "function" then
+            _G.Bundle:notify(msg, vim.log.levels.INFO, { title = "direnv" })
+          else
+            vim.notify(msg, vim.log.levels.INFO, { title = "direnv" })
+          end
+        end
+      end)
     end
-  end
+  end)
 end
 
 return {

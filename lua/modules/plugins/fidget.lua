@@ -9,9 +9,12 @@ return {
     {
       name = "j-hui/fidget.nvim",
       id = "fidget",
-      event = "LspAttach",
+      lazy = false,
+      priority = 90,
+      event = { "VimEnter", "LspAttach" },
       opts = {
         notification = {
+          override_vim_notify = true,
           window = {
             winblend = 0,
             normal_hl = "Comment",
