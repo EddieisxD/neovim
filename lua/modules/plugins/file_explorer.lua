@@ -24,8 +24,8 @@ return {
         hijack_netrw = true,
         hijack_cursor = true,
         view = {
-          width = 30,
-          side = "left",
+          width = 45,
+          side = "right",
         },
       },
 
