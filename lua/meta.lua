@@ -1,3 +1,6 @@
+--- Meta Core Framework Engine
+--- Manages global Bundle initialization, 3-tier data architecture, table sealing, and persistent state.
+
 local meta = {}
 
 -- Setup Runtime Path and package.path for standalone / WIP initialization
@@ -40,19 +43,6 @@ if not _G.nixInfo then
   })
 end
 
-_G.nixInfo.isNix = vim.g.nix_info_plugin_name ~= nil or os.getenv("NIX_STORE") ~= nil
-
-function _G.nixInfo.get_nix_plugin_path(name)
-  if type(_G.nixInfo) == "function" or getmetatable(_G.nixInfo) then
-    local path = _G.nixInfo(nil, "plugins", "lazy", name)
-              or _G.nixInfo(nil, "plugins", "start", name)
-              or _G.nixInfo(nil, "plugins", "specs", name)
-    if path then return path end
-  end
-  return nil
-end
-
---- Bundle Table Construction
 local Bundle = {
   meta = meta,
   settings = {},
@@ -61,42 +51,49 @@ local Bundle = {
     transparent = true,
     number = true,
     relativenumber = true,
-    render_markdown = {
-      code_bg = "none",
-      h1 = { fg = "#ff6b6b", bg = "#1a1111" },
-      h2 = { fg = "#ffa94d", bg = "#1a1510" },
-      h3 = { fg = "#ffd43b", bg = "#1a1a10" },
-      h4 = { fg = "#69db7c", bg = "#101a10" },
-      h5 = { fg = "#74c0fc", bg = "#10101a" },
-      h6 = { fg = "#da77f2", bg = "#15101a" },
-    },
   },
-  state = {
-    active_lsps = {},
-    active_formatters = {},
-    active_linters = {},
-  },
+  state = {},
   modules = {},
   specs = {},
   dag = dag_lib.new(),
   logger = logger,
-  loader_adapter = loader_adapter,
   _initialized = false,
-  _sealed = false,
 }
 
---- Get filepath for persistent runtime state
+--- Get filepath for persistent runtime state based on isolation setting ("strict" | "tmp" | "flexible")
 function Bundle:get_state_filepath()
-  local state_dir = vim.fn.stdpath("state")
-  if vim.fn.isdirectory(state_dir) == 0 then
-    vim.fn.mkdir(state_dir, "p")
+  local mode = self.settings and self.settings.isolation or "flexible"
+  if mode == "strict" then
+    return nil -- Zero disk persistence
+  elseif mode == "tmp" then
+    local tmp_dir = "/tmp/neovim"
+    if vim.fn.isdirectory(tmp_dir) == 0 then
+      vim.fn.mkdir(tmp_dir, "p")
+    end
+    return tmp_dir .. "/bundle_state.json"
+  else -- "flexible" (default)
+    local state_dir = vim.fn.stdpath("state")
+    if vim.fn.isdirectory(state_dir) == 0 then
+      vim.fn.mkdir(state_dir, "p")
+    end
+    return state_dir .. "/bundle_state.json"
   end
-  return state_dir .. "/bundle_state.json"
 end
 
 --- Load persistent runtime state from disk
 function Bundle:load_state()
   local filepath = self:get_state_filepath()
+  if not filepath then
+    logger.info("[Bundle State] Strict isolation mode: using in-memory defaults.")
+    self.state = vim.tbl_deep_extend("force", self.state or {}, {
+      colorscheme = self.settings.colorscheme or self.defaults.colorscheme,
+      transparent = self.settings.transparent ~= false,
+      number = self.settings.number ~= false,
+      relativenumber = self.settings.relativenumber ~= false,
+    })
+    return
+  end
+
   local f = io.open(filepath, "r")
   if f then
     local content = f:read("*a")
@@ -122,9 +119,11 @@ function Bundle:load_state()
   self:save_state()
 end
 
---- Persist runtime state to disk for cross-session survival (NvChad-style state engine)
+--- Persist runtime state to disk for cross-session survival
 function Bundle:save_state()
   local filepath = self:get_state_filepath()
+  if not filepath then return end
+
   local data = {
     colorscheme = self.state.colorscheme,
     transparent = self.state.transparent,
@@ -140,6 +139,16 @@ function Bundle:save_state()
       logger.debug("[Bundle State] Saved persistent state to " .. filepath)
     end
   end
+end
+
+--- Decoupled Notification Bridge enforcing Atomic Module Isolation
+--- Routes notifications through vim.notify (intercepted by Fidget if active)
+function Bundle:notify(msg, level, opts)
+  level = level or vim.log.levels.INFO
+  if type(opts) == "string" then
+    opts = { title = opts }
+  end
+  vim.notify(msg, level, opts or {})
 end
 
 --- Initialize Bundle with Control Plane Settings
@@ -178,72 +187,39 @@ function Bundle:register_module(mod)
     end
   end
 
-  logger.debug(string.format("[Bundle] Registered module: '%s'", mod.id))
-end
-
---- Register a plugin specification
----@param spec_tbl table
-function Bundle:register_spec(spec_tbl)
-  local s = loader_adapter.spec(spec_tbl)
-  table.insert(self.specs, s)
-  logger.debug(string.format("[Bundle] Registered plugin spec: '%s'", s.name))
-end
-
---- Build DAG nodes from registered modules and specs
-function Bundle:build_dag()
-  assert(self._initialized, "[Bundle] Must call Bundle:init(settings) before building DAG")
-  logger.info("[Bundle DAG] Building execution graph...")
-
-  -- 1. Create DAG nodes for registered modules
-  for id, mod in pairs(self.modules) do
-    if mod.exec then
-      self.dag:add_node({
-        id = id,
-        phase = mod.phase or dag_lib.Phases.SETUP,
-        deps = mod.deps or {},
-        exec = mod.exec,
-        meta = { type = "module" },
-      })
-    end
-  end
-
-  -- 2. Create DAG node for Plugin Loader phase
+  -- Wrap module execution into a DAG node
+  local exec_fn = mod.exec or function() end
   self.dag:add_node({
-    id = "system.plugin_loader",
-    phase = dag_lib.Phases.LOADER,
-    deps = { "options" },
+    id = mod.id,
+    phase = mod.phase or dag_lib.Phases.PLUGINS,
+    deps = mod.deps or {},
     exec = function()
-      loader_adapter.setup_loader(self.settings.loader, self.specs, self.settings)
+      logger.info(string.format("[Module Execution] Phase %d: Running module '%s'", mod.phase or dag_lib.Phases.PLUGINS, mod.id))
+      exec_fn()
     end,
-    meta = { type = "loader" },
   })
-
-  logger.info(string.format("[Bundle DAG] Graph constructed with %d nodes", vim.tbl_count(self.dag.nodes)))
 end
 
---- Seal configuration tables to prevent accidental modification before side-effect execution
-function Bundle:seal_configuration()
-  if self.settings.strict_mode and not self._sealed then
-    self.modules = meta.seal(self.modules, "Bundle.modules")
-    self.specs = meta.seal(self.specs, "Bundle.specs")
-    self._sealed = true
-    logger.info("[Bundle] Configuration tables sealed with metatable locks")
-  end
+--- Register a raw plugin spec
+---@param spec table
+function Bundle:register_spec(spec)
+  local normalized = loader_adapter.spec(spec)
+  table.insert(self.specs, normalized)
 end
 
---- Run DAG side-effect execution
----@return table Execution statistics
+--- Execute the full DAG execution pipeline
 function Bundle:execute()
-  self:build_dag()
-  self:seal_configuration()
+  assert(self._initialized, "[Bundle] Must call Bundle:init(settings) before Bundle:execute()")
 
-  logger.info("[Bundle Execution] Commencing side-effect execution phase...")
+  logger.info("[Bundle Pipeline] Preparing plugin loader specs...")
+  loader_adapter.setup_loader(self.settings.loader or "lazy", self.specs, self.settings)
+
+  logger.info("[Bundle Pipeline] Executing DAG topological graph...")
   local stats = self.dag:execute()
-  logger.info("[Bundle Execution] DAG execution completed cleanly")
+  logger.info(string.format("[Bundle Pipeline] Pipeline finished: %d executed, %d failed in %.2fms",
+    stats.executed, stats.failed, stats.total_time_ms))
+
   return stats
 end
-
--- Export global _G.Bundle
-_G.Bundle = meta.strict_table(Bundle, "Bundle", { allow_extension = true })
 
 return Bundle

@@ -1,6 +1,6 @@
 --- Direnv Integration Module Spec
 --- Automatically exports environment variables from direnv / nix-direnv into Neovim's process environment block (vim.fn.setenv & vim.env)
---- on VimEnter, BufEnter, and DirChanged, with non-blocking Fidget notifications.
+--- on VimEnter, BufEnter, and DirChanged, with decoupled notification bridge.
 
 local dag_lib = require("library.dag")
 
@@ -36,11 +36,13 @@ local function sync_direnv(target_dir)
     end
   end
 
-  -- Send notification via Fidget
+  -- Send notification via decoupled Bundle:notify bridge (intercepted by fidget if active)
   if synced_count > 0 then
-    local ok_fidget, fidget = pcall(require, "fidget")
-    if ok_fidget and type(fidget.notify) == "function" then
-      pcall(fidget.notify, "Loaded direnv (" .. synced_count .. " vars) for " .. env_dir, vim.log.levels.INFO, { title = "direnv" })
+    local msg = "Loaded direnv (" .. synced_count .. " vars) for " .. env_dir
+    if _G.Bundle and type(_G.Bundle.notify) == "function" then
+      _G.Bundle:notify(msg, vim.log.levels.INFO, { title = "direnv" })
+    else
+      vim.notify(msg, vim.log.levels.INFO, { title = "direnv" })
     end
   end
 end
