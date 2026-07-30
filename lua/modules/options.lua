@@ -33,7 +33,12 @@ return {
     opt.numberwidth = 4
     opt.signcolumn = "yes"
     opt.foldcolumn = "1"
-    opt.fillchars:append({ eob = " " })
+    opt.fillchars = {
+      eob = " ",
+      vert = " ",
+      horiz = " ",
+      winseparator = " ",
+    }
 
     o.formatoptions = "jcroql"
 
@@ -90,9 +95,6 @@ return {
     o.spell = false
     o.spelllang = "en_us"
     opt.spelloptions:append("camel")
-
-    vim.g.mapleader = " "
-    vim.g.maplocalleader = " "
 
     vim.cmd("cabbrev h tab help")
 

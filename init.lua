@@ -1,6 +1,10 @@
 --- Modular DAG-based Neovim Architecture
 --- Entrypoint: init.lua
 
+-- Set global leader keys BEFORE any plugin loaders initialize (required by lazy.nvim)
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
 -- Enable bytecode caching for fast startup
 if vim.loader then
     vim.loader.enable()

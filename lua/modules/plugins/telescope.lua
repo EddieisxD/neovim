@@ -1,5 +1,5 @@
 --- Telescope Module Spec
---- Features custom 30/70 preview layout and Doom Emacs M-x command palette picker.
+--- Features custom 30/70 preview layout, Doom Emacs M-x command palette picker, eager loading, and instant CWD resolution.
 
 local dag_lib = require("library.dag")
 
@@ -11,8 +11,9 @@ return {
         {
             name = "nvim-telescope/telescope.nvim",
             id = "telescope",
+            lazy = false,
+            priority = 80,
             deps = { "nvim-lua/plenary.nvim" },
-            cmd = "Telescope",
 
             -- Telescope Keybindings & Doom Emacs M-x command palette
             keys = {

@@ -1,4 +1,4 @@
---- Treesitter & Textobjects Module Spec
+--- Treesitter Module Spec
 --- Dual-mode syntax highlighting, foldexpr, indentexpr, auto-installer, and textobjects.
 --- Sourced from wrapper_modules pattern for zero-conflict Nix + Traditional compatibility.
 
@@ -52,12 +52,6 @@ return {
           return true
         end
 
-        local installable_parsers = {}
-        local ok_ts_mod, ts_mod = pcall(require, "nvim-treesitter")
-        if ok_ts_mod and type(ts_mod.get_available) == "function" then
-          installable_parsers = ts_mod.get_available()
-        end
-
         local augroup = vim.api.nvim_create_augroup("DAGTreesitterAutoAttach", { clear = true })
         vim.api.nvim_create_autocmd("FileType", {
           group = augroup,
@@ -68,10 +62,11 @@ return {
             local language = (vim.treesitter.language and vim.treesitter.language.get_lang and vim.treesitter.language.get_lang(filetype)) or filetype
 
             if not treesitter_try_attach(buf, language) then
-              -- Strict check for tree-sitter CLI executable
+              -- Strict check for tree-sitter CLI executable inside callback
               local has_ts_cli = (vim.fn.executable("tree-sitter") == 1)
+              local ok_ts_mod, ts_mod = pcall(require, "nvim-treesitter")
 
-              if has_ts_cli and ok_ts_mod and vim.tbl_contains(installable_parsers, language) and type(ts_mod.install) == "function" then
+              if has_ts_cli and ok_ts_mod and type(ts_mod.install) == "function" then
                 pcall(function()
                   local install_task = ts_mod.install(language)
                   if install_task and type(install_task.await) == "function" then
