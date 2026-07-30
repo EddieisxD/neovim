@@ -1,5 +1,16 @@
 --- NvimTree File Explorer Module (Sourced from NvChad)
+--- Automatically syncs root directory on :cd / DirChanged and enforces borderless seamless UI.
+
 local dag_lib = require("library.dag")
+
+local function make_nvimtree_borderless()
+  local nvimtree_hl = vim.api.nvim_get_hl(0, { name = "NvimTreeNormal" })
+  local bg_val = (nvimtree_hl and nvimtree_hl.bg) and nvimtree_hl.bg or "none"
+
+  vim.api.nvim_set_hl(0, "NvimTreeWinSeparator", { fg = bg_val, bg = bg_val })
+  vim.api.nvim_set_hl(0, "NvimTreeVertSplit", { fg = bg_val, bg = bg_val })
+  vim.api.nvim_set_hl(0, "NvimTreeFloatBorder", { fg = bg_val, bg = bg_val })
+end
 
 return {
   id = "file_explorer",
@@ -23,9 +34,20 @@ return {
         disable_netrw = true,
         hijack_netrw = true,
         hijack_cursor = true,
+        sync_root_with_cwd = true,
+        respect_buf_cwd = true,
+        update_focused_file = {
+          enable = true,
+          update_root = true,
+        },
         view = {
-          width = 45,
+          width = 40,
           side = "right",
+        },
+        renderer = {
+          indent_markers = {
+            enable = false,
+          },
         },
       },
 
@@ -33,6 +55,13 @@ return {
         local ok, tree = pcall(require, "nvim-tree")
         if ok then
           tree.setup(opts or {})
+          make_nvimtree_borderless()
+
+          local augroup = vim.api.nvim_create_augroup("DAGBorderlessNvimTree", { clear = true })
+          vim.api.nvim_create_autocmd({ "ColorScheme", "VimEnter" }, {
+            group = augroup,
+            callback = make_nvimtree_borderless,
+          })
         end
       end,
     },
