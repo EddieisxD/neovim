@@ -1,6 +1,6 @@
 --- Options Module
 --- Reads initial settings from Bundle.state (persisted in bundle_state.json),
---- enables Neovim 0.12+ Core UI2, and configures options with state auto-saving.
+--- configures options, and links MsgArea to Normal for buffer-matching bottom row.
 
 local dag_lib = require("library.dag")
 
@@ -13,7 +13,7 @@ return {
     local o = vim.o
     local state = _G.Bundle and _G.Bundle.state or {}
 
-    -- Enable Neovim 0.12+ Core UI2 (buffer-based cmdline, pagers, and zero "Press ENTER" prompts)
+    -- Enable Neovim 0.12+ Core UI2
     local ok_ui2, ui2 = pcall(require, "vim._core.ui2")
     if ok_ui2 and type(ui2.enable) == "function" then
       pcall(ui2.enable)
@@ -69,6 +69,9 @@ return {
     o.pumheight = 10
     o.pumblend = 10
     opt.laststatus = 3
+
+    -- Link MsgArea to Normal background
+    vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
 
     --- Window Splits
     o.splitbelow = true

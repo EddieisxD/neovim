@@ -32,6 +32,7 @@ function M.enable()
   for _, g in ipairs(all_groups) do
     vim.api.nvim_set_hl(0, g, { bg = "none" })
   end
+  vim.api.nvim_set_hl(0, "MsgArea", { bg = "none" })
   logger.info("[Transparency Engine] Enabled full UI transparency")
 end
 
@@ -40,6 +41,7 @@ function M.disable()
   if _G.Bundle then _G.Bundle.state.transparent = false end
   local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
   pcall(vim.cmd.colorscheme, scheme)
+  vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
   logger.info(string.format("[Transparency Engine] Disabled transparency, restored colorscheme '%s'", scheme))
 end
 
@@ -85,12 +87,16 @@ return {
       callback = function()
         if _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent ~= false then
           M.enable()
+        else
+          vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
         end
       end,
     })
 
     if is_transparent then
       M.enable()
+    else
+      vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
     end
   end,
 }
