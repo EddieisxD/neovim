@@ -1,4 +1,6 @@
 --- Fidget UI Module
+--- Registers fidget.notify subscriber into Bundle.notify_handler for decoupled visual notification rendering.
+
 local dag_lib = require("library.dag")
 
 return {
@@ -14,7 +16,6 @@ return {
       event = { "VimEnter", "LspAttach" },
       opts = {
         notification = {
-          override_vim_notify = true,
           window = {
             winblend = 0,
             normal_hl = "Comment",
@@ -28,6 +29,9 @@ return {
         local ok, fidget = pcall(require, "fidget")
         if ok then
           fidget.setup(opts or {})
+          if _G.Bundle then
+            _G.Bundle.notify_handler = fidget.notify
+          end
         end
       end,
     },

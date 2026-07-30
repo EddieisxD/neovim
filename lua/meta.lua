@@ -51,8 +51,15 @@ local Bundle = {
     transparent = true,
     number = true,
     relativenumber = true,
+    render_markdown = {
+      heading = {
+        color = { "CatppuccinRed", "CatppuccinOrange", "CatppuccinYellow", "CatppuccinGreen", "CatppuccinBlue", "CatppuccinPurple" },
+      },
+    },
   },
   state = {},
+  bridge = {},             -- Shared decoupled plugin communication bridge
+  notify_handler = nil,     -- Dynamic subscriber handler for visual toasts (e.g. fidget)
   modules = {},
   specs = {},
   dag = dag_lib.new(),
@@ -141,19 +148,28 @@ function Bundle:save_state()
   end
 end
 
---- Decoupled Notification Bridge enforcing Atomic Module Isolation
---- Routes notifications through fidget.notify if available, or vim.notify
+--- Decoupled Event-Driven Notification Bridge
+--- Mirrors ERROR and WARN messages to Neovim's :messages history buffer
+--- and delegates visual toasts to registered notify_handler subscribers.
 function Bundle:notify(msg, level, opts)
   level = level or vim.log.levels.INFO
+  opts = opts or {}
   if type(opts) == "string" then
     opts = { title = opts }
   end
 
-  local ok_fidget, fidget = pcall(require, "fidget")
-  if ok_fidget and type(fidget.notify) == "function" then
-    pcall(fidget.notify, msg, level, opts or {})
+  -- 1. Mirror ERROR and WARN to Neovim's :messages buffer
+  if level == vim.log.levels.ERROR or level == vim.log.levels.WARN then
+    local prefix = opts.title and ("[" .. opts.title .. "] ") or ""
+    local hl = (level == vim.log.levels.ERROR) and "ErrorMsg" or "WarningMsg"
+    pcall(vim.api.nvim_echo, { { prefix .. tostring(msg), hl } }, true, {})
+  end
+
+  -- 2. Delegate to registered notify_handler or fallback to vim.notify
+  if type(self.notify_handler) == "function" then
+    pcall(self.notify_handler, msg, level, opts)
   else
-    vim.notify(msg, level, opts or {})
+    pcall(vim.notify, msg, level, opts)
   end
 end
 
@@ -171,6 +187,7 @@ function Bundle:init(settings)
   -- Load or initialize persistent state
   self:load_state()
 
+  _G.Bundle = self
   self._initialized = true
   return self
 end

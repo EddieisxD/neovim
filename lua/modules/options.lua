@@ -1,6 +1,6 @@
 --- Options Module
---- Reads initial settings from Bundle.state (persisted in bundle_state.json)
---- and allows toggling line numbers / relative numbers with state auto-saving.
+--- Reads initial settings from Bundle.state (persisted in bundle_state.json),
+--- enables Neovim 0.12+ Core UI2, and configures options with state auto-saving.
 
 local dag_lib = require("library.dag")
 
@@ -12,6 +12,12 @@ return {
     local opt = vim.opt
     local o = vim.o
     local state = _G.Bundle and _G.Bundle.state or {}
+
+    -- Enable Neovim 0.12+ Core UI2 (buffer-based cmdline, pagers, and zero "Press ENTER" prompts)
+    local ok_ui2, ui2 = pcall(require, "vim._core.ui2")
+    if ok_ui2 and type(ui2.enable) == "function" then
+      pcall(ui2.enable)
+    end
 
     vim.g.netrw_banner = 0
 
@@ -33,12 +39,7 @@ return {
     opt.numberwidth = 4
     opt.signcolumn = "yes"
     opt.foldcolumn = "1"
-    opt.fillchars = {
-      eob = " ",
-      vert = " ",
-      horiz = " ",
-      winseparator = " ",
-    }
+    opt.fillchars:append({ eob = " " })
 
     o.formatoptions = "jcroql"
 

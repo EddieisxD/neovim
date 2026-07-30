@@ -1,5 +1,5 @@
 --- Keymaps Module
---- Defines general navigation, buffer management, floating diagnostic keymaps, and tooling toggles.
+--- Defines general navigation, buffer management, and floating diagnostic keymaps.
 
 local dag_lib = require("library.dag")
 
@@ -46,34 +46,5 @@ return {
     set("n", "<C-j>", "<C-w>j", { desc = "Focus lower window" })
     set("n", "<C-k>", "<C-w>k", { desc = "Focus upper window" })
     set("n", "<C-l>", "<C-w>l", { desc = "Focus right window" })
-
-    -- Tooling Toggle Commands & Controls
-    vim.api.nvim_create_user_command("ToggleFormatOnSave", function()
-      if _G.Bundle then
-        _G.Bundle.settings.format_on_save = not _G.Bundle.settings.format_on_save
-        vim.notify("Format on Save: " .. tostring(_G.Bundle.settings.format_on_save), vim.log.levels.INFO)
-      end
-    end, { desc = "Toggle automatic format on save" })
-
-    vim.api.nvim_create_user_command("ToggleFormatter", function()
-      if _G.Bundle then
-        _G.Bundle.settings.auto_attach_formatter = not _G.Bundle.settings.auto_attach_formatter
-        vim.notify("Auto-attach Formatter: " .. tostring(_G.Bundle.settings.auto_attach_formatter), vim.log.levels.INFO)
-      end
-    end, { desc = "Toggle automatic formatter attachment" })
-
-    vim.api.nvim_create_user_command("ToggleLinter", function()
-      if _G.Bundle then
-        _G.Bundle.settings.auto_attach_linter = not _G.Bundle.settings.auto_attach_linter
-        vim.notify("Auto-attach Linter: " .. tostring(_G.Bundle.settings.auto_attach_linter), vim.log.levels.INFO)
-      end
-    end, { desc = "Toggle automatic linter attachment" })
-
-    vim.api.nvim_create_user_command("ToggleDAP", function()
-      if _G.Bundle then
-        _G.Bundle.settings.auto_attach_dap = not _G.Bundle.settings.auto_attach_dap
-        vim.notify("Auto-attach DAP Debugger: " .. tostring(_G.Bundle.settings.auto_attach_dap), vim.log.levels.INFO)
-      end
-    end, { desc = "Toggle automatic DAP debugger attachment" })
   end,
 }
