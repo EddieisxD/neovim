@@ -1,5 +1,5 @@
 --- GUI & Headless Integration Module
---- Configures smooth animations, font rendering, and glassmorphism for Neovide,
+--- Configures smooth animations, font rendering, padding, and opacity for Neovide,
 --- and adapts layout when running inside VSCode / VSCodium or headless environments.
 
 local dag_lib = require("library.dag")
@@ -14,15 +14,20 @@ return {
     if vim.g.neovide then
       logger.info("[GUI Engine] Neovide GUI detected. Applying Neovide options...")
 
-      vim.g.neovide_transparency = 0.9
+      vim.g.neovide_opacity = 0.65
+      vim.g.neovide_padding_top = 24
+      vim.g.neovide_padding_bottom = 12
+      vim.g.neovide_padding_left = 12
+      vim.g.neovide_padding_right = 12
+
       vim.g.neovide_cursor_animation_length = 0.08
       vim.g.neovide_cursor_trail_size = 0.8
       vim.g.neovide_cursor_vfx_mode = "railgun"
-      vim.g.neovide_remember_window_size = true
+      vim.g.neovide_remember_window_size = false
       vim.g.neovide_confirm_quit = true
       vim.g.neovide_input_macos_alt_is_meta = true
 
-      vim.opt.guifont = "JetBrainsMono Nerd Font:h14"
+      vim.opt.guifont = "JetBrainsMono Nerd Font:h13"
     end
 
     -- 2. VSCode / VSCodium Extension Settings
