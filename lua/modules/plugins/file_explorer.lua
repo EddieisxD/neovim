@@ -15,7 +15,7 @@ end
 return {
   id = "file_explorer",
   phase = dag_lib.Phases.PLUGINS,
-  deps = { "options" },
+  deps = { "options", "keymap_registry" },
   specs = {
     {
       name = "nvim-tree/nvim-tree.lua",
@@ -23,10 +23,9 @@ return {
       deps = { "nvim-tree/nvim-web-devicons" },
       cmd = { "NvimTreeToggle", "NvimTreeFocus", "NvimTreeFindFile" },
 
-      -- Plugin-dependent keybindings specified directly in plugin spec
       keys = {
-        { "<C-n>",      "<cmd>NvimTreeToggle<CR>", desc = "NvimTree toggle window" },
-        { "<leader>e",  "<cmd>NvimTreeFocus<CR>",  desc = "NvimTree focus window" },
+        { "<C-n>",      "<cmd>NvimTreeToggle<CR>", desc = "Toggle file explorer" },
+        { "<leader>e",  "<cmd>NvimTreeFocus<CR>",  desc = "Focus file explorer" },
       },
 
       opts = {
@@ -62,6 +61,12 @@ return {
             group = augroup,
             callback = make_nvimtree_borderless,
           })
+        end
+
+        if vim.g.vscode then
+          local registry = require("modules.keymap_registry").api
+          registry.bind("toggle_tree", nil, "workbench.action.toggleSidebarVisibility")
+          registry.bind("focus_tree", nil, "workbench.files.action.focusFilesExplorer")
         end
       end,
     },

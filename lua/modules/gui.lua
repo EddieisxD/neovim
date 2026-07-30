@@ -14,7 +14,7 @@ return {
     if vim.g.neovide then
       logger.info("[GUI Engine] Neovide GUI detected. Applying Neovide options...")
 
-      vim.g.neovide_opacity = 0.65
+      vim.g.neovide_opacity = 0.7
       vim.g.neovide_padding_top = 24
       vim.g.neovide_padding_bottom = 12
       vim.g.neovide_padding_left = 12
@@ -27,7 +27,7 @@ return {
       vim.g.neovide_confirm_quit = true
       vim.g.neovide_input_macos_alt_is_meta = true
 
-      vim.opt.guifont = "JetBrainsMono Nerd Font:h13"
+      vim.opt.guifont = "JetBrainsMono Nerd Font:h12"
     end
 
     -- 2. VSCode / VSCodium Extension Settings

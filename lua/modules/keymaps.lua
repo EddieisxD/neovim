@@ -6,16 +6,18 @@ local dag_lib = require("library.dag")
 return {
   id = "keymaps",
   phase = dag_lib.Phases.KEYMAPS,
-  deps = { "options" },
+  deps = { "options", "keymap_registry" },
   exec = function()
     local set = vim.keymap.set
+    local registry = require("modules.keymap_registry").api
 
     set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlights" })
-    set("n", "<leader>w", "<cmd>w<CR>", { desc = "Save file" })
-    set("n", "<leader>q", "<cmd>q<CR>", { desc = "Quit" })
 
-    -- Buffer management
-    set("n", "<leader>x", function()
+    -- Synced Keymaps (Auto-adapts between Neovim TUI and VSCode/VSCodium)
+    registry.bind("save_file", "w", "workbench.action.files.save")
+    registry.bind("quit", "q", "workbench.action.closeActiveEditor")
+
+    registry.bind("close_buffer", function()
       local bufnr = vim.api.nvim_get_current_buf()
       local buftype = vim.bo[bufnr].buftype
       local filetype = vim.bo[bufnr].filetype
@@ -28,7 +30,7 @@ return {
           pcall(vim.cmd, "bdelete!")
         end
       end
-    end, { desc = "Close current buffer", silent = true })
+    end, "workbench.action.closeActiveEditor")
 
     -- Floating LSP Diagnostics Keymaps
     local function open_floating_diagnostic()

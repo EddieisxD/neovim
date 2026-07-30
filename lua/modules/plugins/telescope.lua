@@ -6,7 +6,7 @@ local dag_lib = require("library.dag")
 return {
     id = "telescope",
     phase = dag_lib.Phases.PLUGINS,
-    deps = { "options", "keymaps" },
+    deps = { "options", "keymaps", "keymap_registry" },
     specs = {
         {
             name = "nvim-telescope/telescope.nvim",
@@ -15,10 +15,9 @@ return {
             priority = 80,
             deps = { "nvim-lua/plenary.nvim" },
 
-            -- Telescope Keybindings & Doom Emacs M-x command palette
             keys = {
-                { "<A-x>",      "<cmd>Telescope commands<cr>",                                          desc = "Doom Emacs M-x Command Palette" },
-                { "<leader>c",  "<cmd>Telescope commands<cr>",                                          desc = "Command Palette (M-x)" },
+                { "<A-x>",      "<cmd>Telescope commands<cr>",                                          desc = "Command Palette" },
+                { "<leader>c",  "<cmd>Telescope commands<cr>",                                          desc = "Command Palette" },
                 { "<leader>ff", "<cmd>Telescope find_files<cr>",                                        desc = "Find Files" },
                 { "<leader>fw", "<cmd>Telescope live_grep<cr>",                                         desc = "Live Grep" },
                 { "<leader>fg", "<cmd>Telescope live_grep<cr>",                                         desc = "Live Grep" },
@@ -56,6 +55,13 @@ return {
                         },
                     },
                 })
+
+                if vim.g.vscode then
+                    local registry = require("modules.keymap_registry").api
+                    registry.bind("find_files", nil, "workbench.action.quickOpen")
+                    registry.bind("live_grep", nil, "workbench.action.findInFiles")
+                    registry.bind("find_buffers", nil, "workbench.action.showAllEditors")
+                end
             end,
         },
     },
