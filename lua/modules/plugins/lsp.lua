@@ -1,6 +1,6 @@
 --- Dynamic Environment-Sourced LSP Module
 --- Eliminates Mason dependency by dynamically discovering LSP binaries on $PATH
---- (sourced from nix-shell, nix develop, direnv, NixOS, or system shells).
+--- (sourced from nix-shell, nix develop, direnv, NixOS, or system shells) and provides unified :Lsp suite.
 
 local dag_lib = require("library.dag")
 local logger = require("library.logger")
@@ -93,6 +93,89 @@ return {
   exec = function()
     -- Initial environment scan
     scan_and_enable_servers()
+
+    -- Unified :Lsp <subcommand> [lsp_name] command suite
+    local lsp_subcommands = { "enable", "disable", "restart", "stop", "start", "info" }
+
+    local function lsp_complete(arg_lead, cmd_line, cursor_pos)
+      local parts = vim.split(cmd_line, "%s+", { trimempty = true })
+      if #parts == 1 or (#parts == 2 and not cmd_line:match("%s$")) then
+        local matches = {}
+        for _, sub in ipairs(lsp_subcommands) do
+          if sub:find(arg_lead, 1, true) == 1 then
+            table.insert(matches, sub)
+          end
+        end
+        return matches
+      elseif #parts >= 2 then
+        local matches = {}
+        for _, s in ipairs(known_servers) do
+          if s.name:find(arg_lead, 1, true) == 1 then
+            table.insert(matches, s.name)
+          end
+        end
+        return matches
+      end
+      return {}
+    end
+
+    vim.api.nvim_create_user_command("Lsp", function(opts)
+      local args = vim.split(opts.args, "%s+", { trimempty = true })
+      local sub = args[1]
+      local name = args[2]
+
+      if not sub or sub == "info" then
+        local clients = vim.lsp.get_clients()
+        local active_names = {}
+        for _, c in ipairs(clients) do
+          table.insert(active_names, c.name)
+        end
+        local msg = "Active LSP Clients: " .. (#active_names > 0 and table.concat(active_names, ", ") or "None")
+        if _G.Bundle and _G.Bundle.notify then
+          _G.Bundle:notify(msg, vim.log.levels.INFO, { title = "LSP" })
+        else
+          vim.notify(msg, vim.log.levels.INFO, { title = "LSP" })
+        end
+      elseif sub == "restart" then
+        if name then
+          local clients = vim.lsp.get_clients({ name = name })
+          for _, c in ipairs(clients) do
+            vim.lsp.stop_client(c.id)
+          end
+          pcall(vim.lsp.enable, name)
+        else
+          pcall(vim.cmd, "LspRestart")
+        end
+      elseif sub == "stop" or sub == "disable" then
+        if name then
+          local clients = vim.lsp.get_clients({ name = name })
+          for _, c in ipairs(clients) do
+            vim.lsp.stop_client(c.id)
+          end
+          vim.notify("Stopped LSP: " .. name, vim.log.levels.INFO, { title = "LSP" })
+        else
+          for _, c in ipairs(vim.lsp.get_clients()) do
+            vim.lsp.stop_client(c.id)
+          end
+          vim.notify("Stopped all LSP clients", vim.log.levels.INFO, { title = "LSP" })
+        end
+      elseif sub == "start" or sub == "enable" then
+        if name then
+          if vim.lsp and vim.lsp.enable then
+            pcall(vim.lsp.enable, name)
+          end
+          vim.notify("Enabled LSP: " .. name, vim.log.levels.INFO, { title = "LSP" })
+        else
+          scan_and_enable_servers()
+        end
+      end
+    end, {
+      nargs = "*",
+      complete = lsp_complete,
+      desc = "Unified LSP Management Suite (:Lsp enable|disable|restart|stop|start|info <name>)",
+    })
+
+    vim.cmd("cabbrev lsp Lsp")
 
     -- Auto-rescan environment on direnv reload or directory change
     local augroup = vim.api.nvim_create_augroup("LspEnvironmentScanner", { clear = true })

@@ -14,7 +14,7 @@ return {
       id = "conform",
       nix_name = "conform-nvim",
       event = { "BufWritePre" },
-      cmd = { "ConformInfo", "Format" },
+      cmd = { "ConformInfo", "Format", "Formatter" },
       keys = {
         {
           "<leader>fm",
@@ -79,19 +79,55 @@ return {
       end
     end, { desc = "Format current buffer with conform.nvim" })
 
-    -- Formatter toggle commands
-    vim.api.nvim_create_user_command("ToggleFormatOnSave", function()
-      if _G.Bundle then
-        _G.Bundle.settings.format_on_save = not _G.Bundle.settings.format_on_save
-        _G.Bundle:notify("Format on Save: " .. tostring(_G.Bundle.settings.format_on_save), vim.log.levels.INFO, { title = "Formatter" })
-      end
-    end, { desc = "Toggle automatic format on save" })
+    -- Unified :Formatter <subcommand> [formatter_name] command suite
+    local formatter_subcommands = { "enable", "disable", "toggle", "format", "info" }
+    local available_formatters = { "stylua", "nixfmt", "alejandra", "shfmt", "black", "ruff", "rustfmt", "gofmt", "prettier", "clang-format" }
 
-    vim.api.nvim_create_user_command("ToggleFormatter", function()
-      if _G.Bundle then
-        _G.Bundle.settings.auto_attach_formatter = not _G.Bundle.settings.auto_attach_formatter
-        _G.Bundle:notify("Auto-attach Formatter: " .. tostring(_G.Bundle.settings.auto_attach_formatter), vim.log.levels.INFO, { title = "Formatter" })
+    local function formatter_complete(arg_lead, cmd_line, cursor_pos)
+      local parts = vim.split(cmd_line, "%s+", { trimempty = true })
+      if #parts == 1 or (#parts == 2 and not cmd_line:match("%s$")) then
+        local matches = {}
+        for _, sub in ipairs(formatter_subcommands) do
+          if sub:find(arg_lead, 1, true) == 1 then table.insert(matches, sub) end
+        end
+        return matches
+      elseif #parts >= 2 then
+        local matches = {}
+        for _, fmt in ipairs(available_formatters) do
+          if fmt:find(arg_lead, 1, true) == 1 then table.insert(matches, fmt) end
+        end
+        return matches
       end
-    end, { desc = "Toggle automatic formatter attachment" })
+      return {}
+    end
+
+    vim.api.nvim_create_user_command("Formatter", function(opts)
+      local args = vim.split(opts.args, "%s+", { trimempty = true })
+      local sub = args[1]
+
+      if not sub or sub == "format" then
+        local ok, conform = pcall(require, "conform")
+        if ok then conform.format({ async = true, lsp_fallback = true }) end
+      elseif sub == "enable" then
+        if _G.Bundle then _G.Bundle.settings.auto_attach_formatter = true end
+        vim.notify("Formatter enabled", vim.log.levels.INFO, { title = "Formatter" })
+      elseif sub == "disable" then
+        if _G.Bundle then _G.Bundle.settings.auto_attach_formatter = false end
+        vim.notify("Formatter disabled", vim.log.levels.INFO, { title = "Formatter" })
+      elseif sub == "toggle" then
+        if _G.Bundle then
+          _G.Bundle.settings.auto_attach_formatter = not _G.Bundle.settings.auto_attach_formatter
+          vim.notify("Auto-attach Formatter: " .. tostring(_G.Bundle.settings.auto_attach_formatter), vim.log.levels.INFO, { title = "Formatter" })
+        end
+      elseif sub == "info" then
+        pcall(vim.cmd, "ConformInfo")
+      end
+    end, {
+      nargs = "*",
+      complete = formatter_complete,
+      desc = "Unified Formatter Suite (:Formatter enable|disable|toggle|format|info)",
+    })
+
+    vim.cmd("cabbrev formatter Formatter")
   end,
 }

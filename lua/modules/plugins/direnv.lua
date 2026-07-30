@@ -1,21 +1,26 @@
 --- Direnv Integration Module Spec
 --- Automatically exports environment variables from direnv / nix-direnv into Neovim's process environment block (vim.fn.setenv & vim.env)
---- asynchronously with Fidget progress spinner animations and interactive Direnv user commands.
+--- asynchronously on VimEnter and DirChanged with Fidget progress spinner animations and interactive Direnv commands.
 
 local dag_lib = require("library.dag")
 
-local function sync_direnv(target_dir, verbose)
+local last_synced_dir = nil
+
+local function sync_direnv(target_dir, verbose, force)
   if vim.fn.executable("direnv") ~= 1 then return end
 
   target_dir = target_dir or vim.fn.getcwd()
 
-  local env_file = vim.fn.findfile(".envrc", ".;")
+  local env_file = vim.fn.findfile(".envrc", target_dir .. ";")
   if env_file == "" then
-    env_file = vim.fn.findfile(".env", ".;")
+    env_file = vim.fn.findfile(".env", target_dir .. ";")
   end
   if env_file == "" then return end
 
   local env_dir = vim.fn.fnamemodify(env_file, ":p:h")
+
+  -- Skip sync if already synced for this exact env_dir (unless forced)
+  if not force and last_synced_dir == env_dir then return end
 
   -- Create Fidget progress handle spinner animation
   local ok_fidget, fidget = pcall(require, "fidget")
@@ -46,16 +51,19 @@ local function sync_direnv(target_dir, verbose)
               synced_count = synced_count + 1
             end
           end
+          last_synced_dir = env_dir
         end
       end
 
-      -- Finish Fidget progress animation
+      -- Finish Fidget progress animation cleanly
       if progress_handle then
         pcall(function()
-          if is_success then
+          if is_success and synced_count > 0 then
             progress_handle.message = "Loaded direnv (" .. synced_count .. " vars)"
-          else
+          elseif verbose then
             progress_handle.message = "Sync failed (check direnv status)"
+          else
+            progress_handle.message = "Environment ready"
           end
           progress_handle:finish()
         end)
@@ -83,29 +91,29 @@ return {
       lazy = false,
       priority = 100,
       config = function()
-        sync_direnv()
+        sync_direnv(nil, false, true)
 
         local augroup = vim.api.nvim_create_augroup("DAGDirenvSync", { clear = true })
-        vim.api.nvim_create_autocmd({ "VimEnter", "BufEnter", "DirChanged" }, {
+        vim.api.nvim_create_autocmd({ "VimEnter", "DirChanged" }, {
           group = augroup,
           callback = function(args)
             local cwd = (args.event == "DirChanged" and args.file) or vim.fn.getcwd()
-            sync_direnv(cwd)
+            sync_direnv(cwd, false, args.event == "DirChanged")
           end,
         })
       end,
     },
   },
   exec = function()
-    sync_direnv()
+    sync_direnv(nil, false, true)
 
     -- Interactive Direnv user commands
     vim.api.nvim_create_user_command("DirenvExport", function()
-      sync_direnv(nil, true)
+      sync_direnv(nil, true, true)
     end, { desc = "Export/reload direnv environment for current CWD" })
 
     vim.api.nvim_create_user_command("DirenvReload", function()
-      sync_direnv(nil, true)
+      sync_direnv(nil, true, true)
     end, { desc = "Export/reload direnv environment for current CWD" })
 
     vim.api.nvim_create_user_command("DirenvAllow", function()
@@ -113,7 +121,7 @@ return {
       vim.system({ "direnv", "allow" }, { cwd = cwd }, function(res)
         vim.schedule(function()
           if res.code == 0 then
-            sync_direnv(cwd, true)
+            sync_direnv(cwd, true, true)
           else
             vim.notify("direnv allow failed: " .. (res.stderr or ""), vim.log.levels.ERROR, { title = "direnv" })
           end
@@ -125,6 +133,7 @@ return {
       local cwd = vim.fn.getcwd()
       vim.system({ "direnv", "deny" }, { cwd = cwd }, function(res)
         vim.schedule(function()
+          last_synced_dir = nil
           vim.notify("direnv deny executed for " .. cwd, vim.log.levels.INFO, { title = "direnv" })
         end)
       end)
@@ -135,10 +144,12 @@ return {
       local env_file = vim.fn.findfile(".envrc", cwd .. ";")
       if env_file == "" then env_file = vim.fn.findfile(".env", cwd .. ";") end
       if env_file ~= "" then
-        vim.notify("Direnv file found: " .. env_file, vim.log.levels.INFO, { title = "direnv" })
+        vim.notify("Direnv file found: " .. env_file .. " (Last synced: " .. tostring(last_synced_dir) .. ")", vim.log.levels.INFO, { title = "direnv" })
       else
         vim.notify("No .envrc or .env file found in " .. cwd, vim.log.levels.WARN, { title = "direnv" })
       end
     end, { desc = "Show direnv status for current CWD" })
+
+    vim.cmd("cabbrev direnv DirenvStatus")
   end,
 }
