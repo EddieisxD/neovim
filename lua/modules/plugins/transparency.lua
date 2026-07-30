@@ -1,5 +1,5 @@
 --- All-or-Nothing Transparency Engine
---- Toggles full UI transparency (including NvimTree, Telescope, Floats & Statuslines)
+--- Toggles full UI transparency (including NvimTree, Telescope, Floats, Fidget & Statuslines)
 --- and automatically persists transparency state cross-session in bundle_state.json.
 
 local dag_lib = require("library.dag")
@@ -15,6 +15,8 @@ local all_groups = {
   "VertSplit", "WinSeparator",
   "StatusLine", "StatusLineNC",
   "TabLineFill", "MsgArea",
+  -- Fidget Notifications
+  "FidgetTitle", "FidgetTask", "FidgetNormal",
   -- NvimTree File Explorer
   "NvimTreeNormal", "NvimTreeNormalNC", "NvimTreeEndOfBuffer", "NvimTreeWinSeparator",
   -- Telescope Fuzzy Finder
