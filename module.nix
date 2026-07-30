@@ -63,6 +63,10 @@ inputs:
     config.nvim-lib.neovimPlugins.direnv-nvim
     conform-nvim
     nvim-lint
+    nvim-dap
+    nvim-dap-ui
+    nvim-dap-virtual-text
+    nvim-nio
     nvim-lspconfig
     telescope-nvim
     plenary-nvim

@@ -37,20 +37,38 @@
   - Smart textobjects keymaps (`af`, `if`, `ac`, `ic`, `aa`, `ia`) and `tree-sitter-cli` guard (`59231ce`).
 - [x] **Phase 2: Modern `NotAShelf/direnv.nvim` Environment Auto-Sourcing**:
   - Replaced legacy `direnv.vim` with pure Lua `NotAShelf/direnv.nvim`.
-  - Eliminates terminal ANSI control code leakage (`^[[0mdirenv: unloading`).
-- [ ] **Phase 3: Fidget Notifications for `direnv`**:
-  - Route all direnv exports and load events through `fidget.notify` so the user is always notified when a Nix shell is ingested.
-- [ ] **Phase 4: 3-Tier Isolation Modes (`strict` | `tmp` | `flexible`) & Permanent Undo Directory**:
-  - Configure `isolation` setting in `lua/settings.lua` and `lua/meta.lua`.
-  - Move `undodir` in [`lua/modules/options.lua`](file:///home/addy/.config/nvim/lua/modules/options.lua) to `~/.local/state/nvim/undo` for `flexible` mode, and `/tmp/neovim/undo` for `strict`/`tmp` modes.
-- [ ] **Phase 5: Auto-Attach Toggles & `:Lsp` Command Suite**:
-  - Enable `auto_attach_lsp = true`, `auto_attach_formatter = true`, `auto_attach_linter = true`, `auto_attach_dap = true` in `lua/settings.lua`.
-  - Provide `:Lsp` command suite with autocompletion (`:Lsp enable <name>`, `:Lsp disable <name>`, `:Lsp restart <name>`, `:Lsp stop <name>`, `:Lsp info`).
-- [ ] **Phase 6: `conform.nvim` Formatter Engine**:
-  - Modular formatting engine reading `$PATH` binaries with manual formatting keymap `<leader>fm`. Format on save detached by default (`M.format_on_save = false`).
-- [ ] **Phase 7: `nvim-lint` Linter Engine**:
-  - Modular linting engine reading `$PATH` linters with toggle flag.
-- [ ] **Phase 8: `nvim-dap` + `nvim-dap-ui` Debugger Engine**:
+  - Non-blocking asynchronous direnv evaluation with Fidget progress spinner animations and interactive `:direnv` commands.
+- [x] **Phase 3: Fidget Notifications & Decoupled `notify_handler` Subscriber**:
+  - Decoupled `Bundle:notify` engine with `:messages` error mirroring and Fidget progress handles.
+- [x] **Phase 4: 3-Tier Isolation Modes & Permanent Undo Directory**:
+  - Support for `strict`, `tmp`, and `flexible` isolation modes with `/tmp/neovim/` fallback directories.
+- [x] **Phase 5: Unified `:lsp` Command Suite & Cabbrev Aliases**:
+  - Dynamic `$PATH` LSP server scanner (`nil_ls`, `nixd`, `lua_ls`, `pyright`, `gopls`, `rust_analyzer`, `clangd`).
+  - Unified `:lsp` command suite (`enable`, `disable`, `restart`, `stop`, `start`, `info`) with tab completion.
+- [x] **Phase 6: `conform.nvim` Formatter Engine**:
+  - Asynchronous code formatting sourced dynamically from `$PATH` (`stylua`, `nixfmt`, `shfmt`, `black`, `rustfmt`, `gofmt`, `prettier`, `clang-format`).
+  - Keymap `<leader>fm` and unified `:formatter` command suite (`enable`, `disable`, `toggle`, `format`, `info`).
+- [x] **Phase 7: `nvim-lint` Linter Engine**:
+  - Asynchronous code linting engine with `$PATH` discovery (`statix`, `shellcheck`, `luacheck`, `flake8`, `eslint`).
+  - Unified `:linter` command suite (`enable`, `disable`, `toggle`, `lint`, `info`).
+- [x] **Phase 8: `nvim-dap` + `nvim-dap-ui` Debugger Engine**:
   - Full DAP debugging client with visual UI panels (`<leader>db`, `<leader>dc`, `<leader>du`).
-- [ ] **Phase 9: Post-v3 Deep Code Review & Performance Optimization Sprint**:
+  - Unified `:dap` command suite (`enable`, `disable`, `toggle`, `start`, `toggle_breakpoint`, `ui_toggle`, `info`).
+
+---
+
+## 📋 TODO & Deep Verification Backlog
+
+- [ ] **Deep Testing: `nvim-dap` Debugger Adapters**:
+  - Comprehensive testing of DAP debugger attachment (`codelldb`, `python`, `gdb`, `go`).
+  - Verify breakpoint persistence, UI panel layout responsiveness, and in-line virtual text rendering.
+- [ ] **Deep Testing: `nvim-lint` Linter Attachment**:
+  - Validate async diagnostic mapping for `statix`, `shellcheck`, `luacheck`, `flake8`, and `eslint`.
+  - Ensure zero interference between LSP diagnostics and linter diagnostic namespaces.
+- [ ] **LSP Environment Engine Edge Sharpening & Refinements**:
+  - Refine auto-attach handlers for multi-root workspace projects.
+  - Audit server command table definitions and suppress extraneous RPC stderr warnings.
+- [ ] **Borderless NvimTree Separator Refinement**:
+  - Re-evaluate window split highlight group overrides for NvimTree borderless styling across third-party colorschemes.
+- [ ] **Post-v3 Deep Code Review & Performance Optimization Sprint**:
   - Comprehensive code review of every module to benchmark execution speed, eliminate redundant hooks, and ensure 100% DAG crash resilience.
