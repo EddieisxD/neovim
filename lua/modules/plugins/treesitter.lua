@@ -1,8 +1,22 @@
 --- Treesitter Module Spec
 --- Dual-mode syntax highlighting, foldexpr, indentexpr, auto-installer, and textobjects.
---- Sourced from wrapper_modules pattern for zero-conflict Nix + Traditional compatibility.
+--- Sourced from wrapper_modules pattern with UI filetype ignoring to prevent unsupported language warnings.
 
 local dag_lib = require("library.dag")
+
+local ignored_filetypes = {
+  cmd = true,
+  dialog = true,
+  msg = true,
+  pager = true,
+  fidget = true,
+  NvimTree = true,
+  TelescopePrompt = true,
+  help = true,
+  nofile = true,
+  prompt = true,
+  quickfix = true,
+}
 
 return {
   id = "treesitter",
@@ -57,7 +71,7 @@ return {
           group = augroup,
           callback = function(args)
             local buf, filetype = args.buf, args.match
-            if not filetype or filetype == "" then return end
+            if not filetype or filetype == "" or ignored_filetypes[filetype] then return end
 
             local language = (vim.treesitter.language and vim.treesitter.language.get_lang and vim.treesitter.language.get_lang(filetype)) or filetype
 
