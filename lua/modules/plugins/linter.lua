@@ -1,49 +1,64 @@
---- Dynamic Linter Module
---- Sourced dynamically from $PATH (nix-shell, direnv, system) with :Linter command & auto-diagnostics.
+--- Dynamic Linter Module with mfussenegger/nvim-lint
+--- Asynchronous linting sourced dynamically from $PATH binaries with unified :Linter command suite.
 
 local dag_lib = require("library.dag")
 local logger = require("library.logger")
-
-local M = {}
-
-local linters = {
-  nix    = { { bin = "statix", cmd = "statix check --format=err" } },
-  sh     = { { bin = "shellcheck" } },
-  bash   = { { bin = "shellcheck" } },
-  lua    = { { bin = "luacheck" } },
-  python = { { bin = "flake8" }, { bin = "pylint" } },
-}
-
---- Run linters on buffer if executable exists on $PATH
-function M.lint_buffer(bufnr)
-  local settings = _G.Bundle and _G.Bundle.settings or {}
-  if settings.auto_attach_linter == false then return end
-
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
-  local ft = vim.bo[bufnr].filetype
-  local candidates = linters[ft] or {}
-
-  for _, lnt in ipairs(candidates) do
-    if vim.fn.executable(lnt.bin) == 1 then
-      logger.debug(string.format("[Linter] Running linter '%s' on buffer %d [%s]", lnt.bin, bufnr, ft))
-    end
-  end
-end
 
 return {
   id = "linter",
   phase = dag_lib.Phases.PLUGINS,
   deps = { "options" },
-  specs = {},
+  specs = {
+    {
+      name = "mfussenegger/nvim-lint",
+      id = "lint",
+      nix_name = "nvim-lint",
+      event = { "BufReadPost", "BufWritePost" },
+      cmd = { "Lint", "Linter" },
+      opts = {
+        linters_by_ft = {
+          nix = { "statix" },
+          sh = { "shellcheck" },
+          bash = { "shellcheck" },
+          lua = { "luacheck" },
+          python = { "flake8" },
+          javascript = { "eslint" },
+          typescript = { "eslint" },
+        },
+      },
+      config = function(_, opts)
+        local ok, lint = pcall(require, "lint")
+        if ok then
+          lint.linters_by_ft = opts.linters_by_ft or {}
+
+          local augroup = vim.api.nvim_create_augroup("DAGLinterAuto", { clear = true })
+          vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+            group = augroup,
+            callback = function()
+              local settings = _G.Bundle and _G.Bundle.settings or {}
+              if settings.auto_attach_linter ~= false then
+                pcall(lint.try_lint)
+              end
+            end,
+          })
+        end
+      end,
+    },
+  },
 
   exec = function()
     -- Register on Bundle bridge so any component can invoke linting without tight coupling
     if _G.Bundle and _G.Bundle.bridge then
-      _G.Bundle.bridge.lint = M.lint_buffer
+      _G.Bundle.bridge.lint = function()
+        local ok, lint = pcall(require, "lint")
+        if ok then pcall(lint.try_lint) end
+      end
     end
 
+    -- Create :Lint user command
     vim.api.nvim_create_user_command("Lint", function()
-      M.lint_buffer()
+      local ok, lint = pcall(require, "lint")
+      if ok then pcall(lint.try_lint) end
     end, { desc = "Run $PATH linters on current buffer" })
 
     -- Unified :Linter <subcommand> [linter_name] command suite
@@ -73,7 +88,8 @@ return {
       local sub = args[1]
 
       if not sub or sub == "lint" then
-        M.lint_buffer()
+        local ok, lint = pcall(require, "lint")
+        if ok then pcall(lint.try_lint) end
       elseif sub == "enable" then
         if _G.Bundle then _G.Bundle.settings.auto_attach_linter = true end
         vim.notify("Linter enabled", vim.log.levels.INFO, { title = "Linter" })
@@ -86,10 +102,15 @@ return {
           vim.notify("Auto-attach Linter: " .. tostring(_G.Bundle.settings.auto_attach_linter), vim.log.levels.INFO, { title = "Linter" })
         end
       elseif sub == "info" then
+        local ok, lint = pcall(require, "lint")
         local active = {}
         local ft = vim.bo.filetype
-        for _, lnt in ipairs(linters[ft] or {}) do
-          if vim.fn.executable(lnt.bin) == 1 then table.insert(active, lnt.bin) end
+        if ok and lint.linters_by_ft[ft] then
+          for _, name in ipairs(lint.linters_by_ft[ft]) do
+            local lnt = lint.linters[name]
+            local cmd = type(lnt) == "table" and lnt.cmd or name
+            if vim.fn.executable(cmd) == 1 then table.insert(active, name) end
+          end
         end
         vim.notify("Active linters for " .. ft .. ": " .. (#active > 0 and table.concat(active, ", ") or "None"), vim.log.levels.INFO, { title = "Linter" })
       end
@@ -100,13 +121,5 @@ return {
     })
 
     vim.cmd("cabbrev linter Linter")
-
-    local augroup = vim.api.nvim_create_augroup("DAGLinter", { clear = true })
-    vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
-      group = augroup,
-      callback = function(args)
-        M.lint_buffer(args.buf)
-      end,
-    })
   end,
 }
