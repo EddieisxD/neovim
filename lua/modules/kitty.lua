@@ -1,6 +1,6 @@
 --- Kitty Terminal Remote Control Integration
 --- Removes window padding on startup if Kitty remote control is active,
---- and restores default padding on exit. Bridge-compatible.
+--- applies internal Neovim gutter padding, and restores default Kitty padding on exit.
 
 local dag_lib = require("library.dag")
 local logger = require("library.logger")
@@ -33,7 +33,7 @@ end
 
 return {
   id = "kitty",
-  phase = dag_lib.Phases.SETUP,
+  phase = dag_lib.Phases.SETUP + 2,
   deps = { "options" },
   exec = function()
     -- Register on Bundle bridge so any module can trigger terminal padding changes
@@ -42,6 +42,10 @@ return {
     end
 
     if not is_kitty() then return end
+
+    -- Apply Neovim internal gutter padding options
+    vim.opt.signcolumn = "yes"
+    vim.opt.foldcolumn = "1"
 
     -- Trigger padding removal on UIEnter / VimEnter when terminal UI is fully rendered
     local augroup = vim.api.nvim_create_augroup("KittyTerminalPadding", { clear = true })
@@ -53,7 +57,7 @@ return {
       end,
     })
 
-    -- Restore default padding on exit
+    -- Restore default Kitty padding on exit
     vim.api.nvim_create_autocmd("VimLeavePre", {
       group = augroup,
       callback = function()
