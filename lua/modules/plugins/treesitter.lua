@@ -14,6 +14,7 @@ local ignored_filetypes = {
   ["blink-cmp-documentation"] = true,
   NvimTree = true,
   TelescopePrompt = true,
+  TelescopeResults = true,
   help = true,
   nofile = true,
   prompt = true,

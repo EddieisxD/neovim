@@ -5,36 +5,42 @@
 local dag_lib = require("library.dag")
 local logger = require("library.logger")
 
---- Registry of known Language Servers and their executable names & settings
+--- Registry of known Language Servers and their executable names, commands & settings
 local known_servers = {
   {
     name = "nil_ls",
     bin = "nil",
+    cmd = { "nil" },
     ft = { "nix" },
     settings = {
       ["nil"] = {
         formatting = { command = { "nixfmt" } },
-        nixos = {
-          options = {
-            expr = "null", -- Suppresses NixOS option eval error when not in a system configuration
-          },
-        },
       },
     },
   },
-  { name = "nixd",          bin = "nixd",                      ft = { "nix" } },
-  { name = "lua_ls",        bin = "lua-language-server",       ft = { "lua" } },
-  { name = "pyright",       bin = "pyright-langserver",        ft = { "python" } },
-  { name = "pylsp",         bin = "pylsp",                     ft = { "python" } },
-  { name = "gopls",         bin = "gopls",                     ft = { "go", "gomod" } },
-  { name = "rust_analyzer", bin = "rust-analyzer",             ft = { "rust" } },
-  { name = "ts_ls",         bin = "typescript-language-server", ft = { "typescript", "javascript", "typescriptreact", "javascriptreact" } },
-  { name = "clangd",        bin = "clangd",                    ft = { "c", "cpp", "objc", "objcpp" } },
-  { name = "bashls",        bin = "bash-language-server",      ft = { "sh", "bash" } },
-  { name = "taplo",         bin = "taplo",                     ft = { "toml" } },
-  { name = "yamlls",        bin = "yaml-language-server",      ft = { "yaml", "yml" } },
-  { name = "jsonls",        bin = "vscode-json-language-server", ft = { "json", "jsonc" } },
-  { name = "zls",           bin = "zls",                       ft = { "zig" } },
+  {
+    name = "nixd",
+    bin = "nixd",
+    cmd = { "nixd" },
+    ft = { "nix" },
+    settings = {
+      nixd = {
+        formatting = { command = { "nixfmt" } },
+      },
+    },
+  },
+  { name = "lua_ls",        bin = "lua-language-server",       cmd = { "lua-language-server" },       ft = { "lua" } },
+  { name = "pyright",       bin = "pyright-langserver",        cmd = { "pyright-langserver", "--stdio" }, ft = { "python" } },
+  { name = "pylsp",         bin = "pylsp",                     cmd = { "pylsp" },                     ft = { "python" } },
+  { name = "gopls",         bin = "gopls",                     cmd = { "gopls" },                     ft = { "go", "gomod" } },
+  { name = "rust_analyzer", bin = "rust-analyzer",             cmd = { "rust-analyzer" },             ft = { "rust" } },
+  { name = "ts_ls",         bin = "typescript-language-server", cmd = { "typescript-language-server", "--stdio" }, ft = { "typescript", "javascript", "typescriptreact", "javascriptreact" } },
+  { name = "clangd",        bin = "clangd",                    cmd = { "clangd" },                    ft = { "c", "cpp", "objc", "objcpp" } },
+  { name = "bashls",        bin = "bash-language-server",      cmd = { "bash-language-server", "start" }, ft = { "sh", "bash" } },
+  { name = "taplo",         bin = "taplo",                     cmd = { "taplo", "lsp", "stdio" },     ft = { "toml" } },
+  { name = "yamlls",        bin = "yaml-language-server",      cmd = { "yaml-language-server", "--stdio" }, ft = { "yaml", "yml" } },
+  { name = "jsonls",        bin = "vscode-json-language-server", cmd = { "vscode-json-language-server", "--stdio" }, ft = { "json", "jsonc" } },
+  { name = "zls",           bin = "zls",                       cmd = { "zls" },                       ft = { "zig" } },
 }
 
 local active_servers = {}
@@ -50,10 +56,12 @@ local function scan_and_enable_servers()
 
       logger.info(string.format("[LSP Environment Engine] Discovered binary '%s' on $PATH for LSP '%s'", s.bin, s.name))
 
+      local server_cmd = s.cmd or { s.bin }
+
       if vim.lsp and vim.lsp.config then
         -- Neovim 0.11+ Native LSP API
         vim.lsp.config(s.name, {
-          cmd = { s.bin, "--stdio" },
+          cmd = server_cmd,
           filetypes = s.ft,
           settings = s.settings or {},
         })
@@ -63,6 +71,7 @@ local function scan_and_enable_servers()
         local ok, lspconfig = pcall(require, "lspconfig")
         if ok and lspconfig[s.name] then
           lspconfig[s.name].setup({
+            cmd = server_cmd,
             settings = s.settings or {},
           })
         end
