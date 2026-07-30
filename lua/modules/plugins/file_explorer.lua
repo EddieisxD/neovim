@@ -4,12 +4,12 @@
 local dag_lib = require("library.dag")
 
 local function make_nvimtree_borderless()
-  local nvimtree_hl = vim.api.nvim_get_hl(0, { name = "NvimTreeNormal" })
-  local bg_val = (nvimtree_hl and nvimtree_hl.bg) and nvimtree_hl.bg or "none"
+  local normal_hl = vim.api.nvim_get_hl(0, { name = "NvimTreeNormal" })
+  local bg_val = (normal_hl and normal_hl.bg) and normal_hl.bg or "none"
 
+  vim.api.nvim_set_hl(0, "NvimTreeNormalNC", { link = "NvimTreeNormal" })
   vim.api.nvim_set_hl(0, "NvimTreeWinSeparator", { fg = bg_val, bg = bg_val })
   vim.api.nvim_set_hl(0, "NvimTreeVertSplit", { fg = bg_val, bg = bg_val })
-  vim.api.nvim_set_hl(0, "NvimTreeFloatBorder", { fg = bg_val, bg = bg_val })
 end
 
 return {
@@ -41,8 +41,8 @@ return {
           update_root = true,
         },
         view = {
-          width = 40,
-          side = "right",
+          width = 30,
+          side = "left",
         },
         renderer = {
           indent_markers = {
