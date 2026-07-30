@@ -61,6 +61,7 @@ inputs:
     nvim-treesitter.withAllGrammars
     nvim-treesitter-textobjects
     config.nvim-lib.neovimPlugins.direnv-nvim
+    conform-nvim
     nvim-lspconfig
     telescope-nvim
     plenary-nvim
