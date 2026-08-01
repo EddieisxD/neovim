@@ -31,6 +31,12 @@ return {
         if ok_dapui then dapui.setup({}) end
         if ok_vt then vt.setup({}) end
 
+        -- Curated DAP Breakpoint signs matching render-markdown.nvim aesthetic
+        vim.fn.sign_define("DapBreakpoint", { text = "󰏤 ", texthl = "DiagnosticError", linehl = "", numhl = "" })
+        vim.fn.sign_define("DapBreakpointRejected", { text = "󰏦 ", texthl = "DiagnosticWarn", linehl = "", numhl = "" })
+        vim.fn.sign_define("DapLogPoint", { text = "󰦪 ", texthl = "DiagnosticInfo", linehl = "", numhl = "" })
+        vim.fn.sign_define("DapStopped", { text = "󰁔 ", texthl = "DiagnosticOk", linehl = "DapStoppedLine", numhl = "" })
+
         if ok_dap and ok_dapui then
           dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
           dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
