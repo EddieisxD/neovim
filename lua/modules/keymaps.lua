@@ -11,7 +11,16 @@ return {
     local set = vim.keymap.set
     local registry = require("modules.keymap_registry").api
 
-    set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlights" })
+    -- Smart <Esc> - Closes open floating windows (LSP Hover, Diagnostics) and clears search highlights
+    set("n", "<Esc>", function()
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local config = vim.api.nvim_win_get_config(win)
+        if config and config.relative and config.relative ~= "" then
+          pcall(vim.api.nvim_win_close, win, true)
+        end
+      end
+      vim.cmd("nohlsearch")
+    end, { desc = "Close floating windows and clear search highlights" })
 
     -- Synced Keymaps (Auto-adapts between Neovim TUI and VSCode/VSCodium)
     registry.bind("save_file", "w", "workbench.action.files.save")
