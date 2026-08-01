@@ -1,5 +1,5 @@
 --- Keymaps Module
---- Defines general navigation, buffer management, and floating diagnostic keymaps.
+--- Defines general navigation, buffer management, LSP hover (K), and floating diagnostic keymaps.
 
 local dag_lib = require("library.dag")
 
@@ -32,13 +32,17 @@ return {
       end
     end, "workbench.action.closeActiveEditor")
 
-    -- Floating LSP Diagnostics Keymaps
+    -- LSP Hover Window (K) - Displays signatures & markdown docs for built-in and custom functions
+    set("n", "K", function()
+      vim.lsp.buf.hover({ border = "rounded" })
+    end, { desc = "LSP Hover Documentation & Function Signatures" })
+
+    -- Floating LSP / Linter Diagnostics Keymaps (with explicit source tags)
     local function open_floating_diagnostic()
-      vim.diagnostic.open_float({ border = "rounded", scope = "line" })
+      vim.diagnostic.open_float({ border = "rounded", scope = "line", source = "always" })
     end
 
     set("n", "<leader>cd", open_floating_diagnostic, { desc = "Open floating LSP diagnostic" })
-    set("n", "<leader>e", open_floating_diagnostic, { desc = "Open floating LSP diagnostic" })
     set("n", "gl", open_floating_diagnostic, { desc = "Open floating LSP diagnostic" })
     set("n", "]d", function() vim.diagnostic.goto_next({ float = true }) end, { desc = "Next LSP diagnostic" })
     set("n", "[d", function() vim.diagnostic.goto_prev({ float = true }) end, { desc = "Previous LSP diagnostic" })

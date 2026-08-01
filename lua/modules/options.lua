@@ -1,6 +1,6 @@
 --- Options Module
 --- Reads initial settings from Bundle.state (persisted in bundle_state.json),
---- enables Neovim 0.12+ Core UI2, configures options, signcolumn expansion, and diagnostic icons.
+--- enables Neovim 0.12+ Core UI2, configures options, signcolumn expansion, and diagnostic icons with source tags.
 
 local dag_lib = require("library.dag")
 
@@ -33,12 +33,13 @@ return {
     o.linebreak = true
     o.textwidth = 0
 
-    --- Gutter & Line Numbers (Expanded 2-column signcolumn for uncluttered DAP/Git/LSP signs)
+    --- Gutter & Line Numbers (Clean 2-column signcolumn with standard foldcolumn)
     opt.number = state.number ~= false
     opt.relativenumber = state.relativenumber ~= false
     opt.numberwidth = 4
     opt.signcolumn = "yes:2"
     opt.foldcolumn = "1"
+
     opt.fillchars = {
       eob = " ",
       fold = " ",
@@ -79,7 +80,7 @@ return {
     -- Link MsgArea to Normal background
     vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
 
-    -- Curated Diagnostic Signs (Matching render-markdown.nvim aesthetic)
+    -- Curated Diagnostic Signs & Floating Window Settings (Matching render-markdown.nvim aesthetic)
     vim.diagnostic.config({
       signs = {
         text = {
@@ -91,6 +92,12 @@ return {
       },
       virtual_text = {
         prefix = "● ",
+      },
+      float = {
+        border = "rounded",
+        source = "always",
+        header = "",
+        prefix = "",
       },
       severity_sort = true,
     })
