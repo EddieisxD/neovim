@@ -53,11 +53,6 @@ inputs:
   # General plugin specs list
   config.specs.general = with pkgs.vimPlugins; [
     catppuccin-nvim
-    oxocarbon-nvim
-    nightfox-nvim
-    kanagawa-nvim
-    gruvbox-material
-    vague-nvim
     nvim-treesitter.withAllGrammars
     nvim-treesitter-textobjects
     config.nvim-lib.neovimPlugins.direnv-nvim
@@ -72,12 +67,13 @@ inputs:
     plenary-nvim
     blink-cmp
     nvim-tree-lua
+    oil-nvim
     nvim-web-devicons
     render-markdown-nvim
     fidget-nvim
     lualine-nvim
-    mason-nvim
-    mason-lspconfig-nvim
+    scope-nvim
+    hbac-nvim
     nvim-autopairs
     which-key-nvim
   ];

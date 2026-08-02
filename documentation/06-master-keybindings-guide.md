@@ -4,11 +4,12 @@ This document is the unified master reference for all keybindings across Neovim 
 
 ---
 
-## ⌨️ 1. File Explorer (`NvimTree`)
+## ⌨️ 1. File Explorer (`NvimTree` & `Oil.nvim`)
 | Keybind | Action | Description |
 | :--- | :--- | :--- |
 | **`<C-n>`** | `NvimTreeToggle` | Toggle NvimTree sidebar window |
 | **`<leader>e`** | `NvimTreeFocus` | Focus cursor inside NvimTree |
+| **`-`** | `Oil` | Open parent directory in Oil editable buffer file explorer |
 
 ---
 
@@ -47,12 +48,13 @@ This document is the unified master reference for all keybindings across Neovim 
 | Keybind / Command | Action | Description |
 | :--- | :--- | :--- |
 | **`K`** | `vim.lsp.buf.hover()` | Hover window (signatures, parameter docs for built-in & custom functions) |
-| **`gd`** | `vim.lsp.buf.definition()` | Go to symbol definition |
+| **`gd`** | `vim.lsp.buf.definition()` | Go to symbol definition / Open `[[wikilink]]` note (creates file if missing) |
+| **`<C-w>gd`** | `split_definition` | Open symbol definition / `[[wikilink]]` note in a **new vertical split** |
 | **`gD`** | `vim.lsp.buf.declaration()` | Go to symbol declaration |
-| **`gr`** | `vim.lsp.buf.references()` | List all references to symbol |
+| **`gr`** | `vim.lsp.buf.references()` | List all references to symbol / vault backlinks |
 | **`gi`** | `vim.lsp.buf.implementation()` | Go to interface implementation |
-| **`<leader>ca`** | `vim.lsp.buf.code_action()` | Trigger LSP code actions / quickfixes |
-| **`<leader>rn`** | `vim.lsp.buf.rename()` | Rename symbol across workspace |
+| **`<leader>ca`** | `vim.lsp.buf.code_action()` | Trigger LSP code actions / quickfixes / Add word to dictionary / Create missing note |
+| **`<leader>rn`** | `vim.lsp.buf.rename()` | Rename symbol across workspace / PKM vault |
 | **`gl`** or **`<leader>cd`** | `vim.diagnostic.open_float()` | Open rounded floating diagnostic with `[source]` tag |
 | **`]d`** / **`[d`** | `goto_next` / `goto_prev` | Jump to next or previous diagnostic warning/error |
 | **`:lsp info`** | `Lsp info` | List active LSP clients attached to buffer |
@@ -60,7 +62,19 @@ This document is the unified master reference for all keybindings across Neovim 
 
 ---
 
-## 🐛 6. DAP Debugging (`nvim-dap` + `nvim-dap-ui`)
+## 📝 6. PKM Note-Taking & Dictionary Management (`markdown-oxide` & `harper_ls`)
+| Keybind / Command | Action | Description |
+| :--- | :--- | :--- |
+| **`:Daily`** | `Daily [args]` | Open/create daily note (`:Daily`, `:Daily tomorrow`, `:Daily -1`) |
+| **`<leader>mc`** or **`<leader>tc`** | `toggle_checkbox` | Cycle Markdown checkbox `[ ]` $\rightarrow$ `[/]` $\rightarrow$ `[x]` |
+| **`<leader>mp`** or **`<leader>pi`** | `paste_image` | Paste image from clipboard to `./assets/` and insert link |
+| **`zg`** | `spell_add` | Add word under cursor to portable `dictionary.utf-8.add` |
+| **`zw`** | `spell_bad` | Mark word under cursor as misspelled |
+| **`zug`** | `spell_undo` | Undo adding word to dictionary |
+
+---
+
+## 🐛 7. DAP Debugging (`nvim-dap` + `nvim-dap-ui`)
 | Keybind / Command | Action | Description |
 | :--- | :--- | :--- |
 | **`<leader>db`** | `DapToggleBreakpoint` | Toggle breakpoint on current line (`󰏤`) |
@@ -70,51 +84,20 @@ This document is the unified master reference for all keybindings across Neovim 
 
 ---
 
-## 🪟 7. Window Navigation & Buffer Management
+## 🪟 8. Window Splits, Tabpages & Buffer Navigation
 | Keybind | Action | Description |
 | :--- | :--- | :--- |
+| **`]b`** | `bnext` | Switch to next open buffer |
+| **`[b`** | `bprevious` | Switch to previous open buffer |
+| **`<leader>sv`** | `vsplit` | Split window vertically |
+| **`<leader>sh`** | `split` | Split window horizontally |
+| **`<leader>se`** | `<C-w>=` | Make all window splits equal size |
+| **`<leader>sx`** | `close` | Close current window split |
+| **`<leader>st`** | `wincmd T` | **Move current split into a new tab page** |
+| **`<leader>sm`** | `tab_to_split` | **Move tab buffer back into a vertical split** |
+| **`gt`** / **`gT`** | `tabnext` / `tabprev` | Jump to next / previous tab page |
 | **`<leader>w`** | `write` | Save current file |
 | **`<leader>q`** | `quit` | Close current window |
 | **`<leader>x`** | `bdelete` | Close active buffer / tab cleanly |
 | **`<C-h>`** / **`<C-j>`** / **`<C-k>`** / **`<C-l>`** | `C-w h/j/k/l` | Navigate left / down / up / right between window splits |
 | **`<Esc>`** | `nohlsearch` | Dismiss floating windows (LSP Hover, Diagnostics) & clear search highlights |
-
----
-
-## 🚀 8. Vim Core Motions, Folds, Marks & Gototext Reference
-
-### Goto Line Numbers & Jump History
-- `[line_number]G` / `:[line_number]<Enter>` / `[line_number]gg`: Jump directly to line number.
-- `Ctrl+o` / `Ctrl+i`: Move backward / forward in jump history.
-- `''`: Teleport back to previous cursor line.
-- `` ` ``: Teleport back to previous cursor line and column.
-- `:jumps`: Display complete jump history.
-
-### Folds (`zf`, `za`, `zR`, `zM`)
-- `za`: Toggle fold at cursor.
-- `zo` / `zc`: Open / close fold at cursor.
-- `zR` / `zM`: Open all folds / close all folds across document.
-
-### Word & Line-Level Motions
-- `w` / `W`: Jump forward to start of next word / WORD.
-- `b` / `B`: Jump backward to start of previous word / WORD.
-- `e` / `E`: Jump forward to end of next word / WORD.
-- `0`: Absolute beginning of line.
-- `^`: First non-blank character of line.
-- `$`: End of line.
-
-### Local Character Searches
-- `f[char]` / `F[char]`: Find and jump forward / backward to `[char]`.
-- `t[char]` / `T[char]`: Jump forward / backward until just before `[char]`.
-- `;` / `,`: Repeat previous character search forward / backward.
-
-### File Marks
-- `m[letter]`: Set mark at current position (e.g. `ma`).
-- `'[letter]`: Teleport to line of mark `a`.
-- `` `[letter] ``: Teleport to exact column and line of mark `a`.
-- `m[Uppercase]`: Global mark across files (e.g. `mA`).
-
-### Text Objects & Bracket Navigation
-- `%`: Jump between matching pairs `()`, `[]`, `{}`.
-- `[{` / `]}`: Jump to opening / closing brace of current block.
-- `[(` / `])`: Jump to opening / closing parenthesis of current block.

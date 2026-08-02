@@ -1,65 +1,92 @@
---- Dynamic Render-Markdown Module with Dynamic Theme Palette Engine
---- Adapts markdown heading highlight groups dynamically per colorscheme.
+--- Render Markdown & PKM Integration Module
+--- Visual Markdown rendering via render-markdown.nvim + PKM Checkbox Toggling & Clipboard Image Pasting.
 
 local dag_lib = require("library.dag")
 
-local function setup_markdown_highlights()
-  local defaults = _G.Bundle and _G.Bundle.defaults and _G.Bundle.defaults.render_markdown or {}
+--- Cycle checkbox states [ ] -> [/] -> [x] -> [ ]
+local function toggle_checkbox()
+  local line = vim.api.nvim_get_current_line()
+  if line:match("%[% %]") then
+    line = line:gsub("%[% %]", "[/]", 1)
+  elseif line:match("%[%/%]") then
+    line = line:gsub("%[%/%]", "[x]", 1)
+  elseif line:match("%[x%]") then
+    line = line:gsub("%[x%]", "[ ]", 1)
+  elseif line:match("%[%-%]") then
+    line = line:gsub("%[%-%]", "[ ]", 1)
+  end
+  vim.api.nvim_set_current_line(line)
+end
 
-  local normal_hl = vim.api.nvim_get_hl(0, { name = "Normal" })
-  local is_dark = vim.o.background == "dark"
-
-  local function blend(hex, bg_hex, alpha)
-    return hex
+--- Paste image from system clipboard (wl-paste / xclip / pngpaste) into ./assets/ and insert link
+local function paste_image_from_clipboard()
+  local cwd = vim.fn.expand("%:p:h")
+  local assets_dir = cwd .. "/assets"
+  if vim.fn.isdirectory(assets_dir) == 0 then
+    vim.fn.mkdir(assets_dir, "p")
   end
 
-  local h1 = vim.api.nvim_get_hl(0, { name = "CatppuccinRed" })
-  local h2 = vim.api.nvim_get_hl(0, { name = "CatppuccinOrange" })
-  local h3 = vim.api.nvim_get_hl(0, { name = "CatppuccinYellow" })
-  local h4 = vim.api.nvim_get_hl(0, { name = "CatppuccinGreen" })
-  local h5 = vim.api.nvim_get_hl(0, { name = "CatppuccinBlue" })
-  local h6 = vim.api.nvim_get_hl(0, { name = "CatppuccinPurple" })
+  local filename = "image_" .. os.date("%Y%m%d_%H%M%S") .. ".png"
+  local filepath = assets_dir .. "/" .. filename
+  local rel_path = "./assets/" .. filename
 
-  vim.api.nvim_set_hl(0, "RenderMarkdownH1Bg", { bg = h1.bg })
-  vim.api.nvim_set_hl(0, "RenderMarkdownH2Bg", { bg = h2.bg })
-  vim.api.nvim_set_hl(0, "RenderMarkdownH3Bg", { bg = h3.bg })
-  vim.api.nvim_set_hl(0, "RenderMarkdownH4Bg", { bg = h4.bg })
-  vim.api.nvim_set_hl(0, "RenderMarkdownH5Bg", { bg = h5.bg })
-  vim.api.nvim_set_hl(0, "RenderMarkdownH6Bg", { bg = h6.bg })
+  local cmd = nil
+  if vim.fn.executable("wl-paste") == 1 then
+    cmd = { "wl-paste", "--type", "image/png" }
+  elseif vim.fn.executable("xclip") == 1 then
+    cmd = { "xclip", "-selection", "clipboard", "-t", "image/png", "-o" }
+  elseif vim.fn.executable("pngpaste") == 1 then
+    cmd = { "pngpaste", filepath }
+  end
+
+  if not cmd then
+    vim.notify("No clipboard image tool found (install wl-clipboard, xclip, or pngpaste)", vim.log.levels.WARN, { title = "PKM Paste Image" })
+    return
+  end
+
+  if cmd[1] ~= "pngpaste" then
+    local out = vim.fn.system(cmd)
+    if vim.v.shell_error ~= 0 or #out == 0 then
+      vim.notify("No image found in clipboard", vim.log.levels.WARN, { title = "PKM Paste Image" })
+      return
+    end
+    local f = io.open(filepath, "wb")
+    if f then
+      f:write(out)
+      f:close()
+    end
+  end
+
+  local link_str = string.format("![[%s]]", rel_path)
+  vim.api.nvim_put({ link_str }, "c", true, true)
+  vim.notify("Pasted image to " .. rel_path, vim.log.levels.INFO, { title = "PKM Paste Image" })
 end
 
 return {
   id = "render_markdown",
   phase = dag_lib.Phases.PLUGINS,
-  deps = { "options" },
+  deps = { "treesitter" },
   specs = {
     {
       name = "MeanderingProgrammer/render-markdown.nvim",
       id = "render-markdown",
-      deps = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
-      ft = { "markdown", "norg", "rmd", "org" },
+      ft = { "markdown" },
+      deps = { "nvim-treesitter/nvim-treesitter" },
       opts = {
-        heading = {
-          enabled = true,
-          sign = true,
-          position = "overlay",
-          icons = { "󰲡 ", "󰲣 ", "󰲥 ", "󰲧 ", "󰲩 ", "󰲫 " },
-          backgrounds = {
-            "RenderMarkdownH1Bg",
-            "RenderMarkdownH2Bg",
-            "RenderMarkdownH3Bg",
-            "RenderMarkdownH4Bg",
-            "RenderMarkdownH5Bg",
-            "RenderMarkdownH6Bg",
-          },
-        },
+        heading = { enabled = true },
+        code = { enabled = true },
+        checkbox = { enabled = true },
       },
       config = function(_, opts)
         local ok, rm = pcall(require, "render-markdown")
-        if ok then
-          setup_markdown_highlights()
-          rm.setup(opts or {})
-        end
+        if ok then rm.setup(opts) end
+
+        -- PKM Keybindings for Markdown files
+        local set = vim.keymap.set
+        set("n", "<leader>mc", toggle_checkbox, { desc = "PKM: Cycle Checkbox [ ] -> [/] -> [x]" })
+        set("n", "<leader>tc", toggle_checkbox, { desc = "PKM: Cycle Checkbox [ ] -> [/] -> [x]" })
+        set("n", "<leader>mp", paste_image_from_clipboard, { desc = "PKM: Paste Image from Clipboard" })
+        set("n", "<leader>pi", paste_image_from_clipboard, { desc = "PKM: Paste Image from Clipboard" })
       end,
     },
   },

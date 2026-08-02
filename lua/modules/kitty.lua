@@ -1,5 +1,5 @@
 --- Kitty Terminal Remote Control Integration
---- Removes window padding and outer margins on startup if Kitty remote control is active,
+--- Applies top padding to create a gap above the top bufferline,
 --- applies internal Neovim gutter padding, and restores default Kitty padding/margin on exit.
 
 local dag_lib = require("library.dag")
@@ -50,13 +50,13 @@ return {
     vim.opt.signcolumn = "yes"
     vim.opt.foldcolumn = "1"
 
-    -- Trigger padding & margin removal on UIEnter / VimEnter when terminal UI is fully rendered
+    -- Apply 12px top window padding gap above the top bufferline
     local augroup = vim.api.nvim_create_augroup("KittyTerminalPadding", { clear = true })
     vim.api.nvim_create_autocmd({ "VimEnter", "UIEnter" }, {
       group = augroup,
       once = true,
       callback = function()
-        set_kitty_padding(0, 0)
+        set_kitty_padding(12, 0)
       end,
     })
 
@@ -69,6 +69,6 @@ return {
     })
 
     -- Initial attempt
-    set_kitty_padding(0, 0)
+    set_kitty_padding(12, 0)
   end,
 }

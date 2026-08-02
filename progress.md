@@ -47,29 +47,29 @@
 
 ## 📋 Pre-v3 Finalization Agenda & Priority Execution Backlog
 
-- [ ] **Task 1: Obsidian / Markdown-Oxide PKM Note-Taking Integration**:
-  - Configure `markdown-oxide` LSP server with PKM keybindings for daily notes, backlinks, and tags.
-  - Evaluate `obsidian.nvim` / `orgmode` fallback options if unsatisfied with plain markdown-oxide.
-- [ ] **Task 2: Harper Grammar Engine, Custom Portable Dictionary & Snippets**:
-  - Integrate `harper_ls` for grammar, spellchecking, and typo detection across Markdown PKM notes and code.
-  - Setup custom portable dictionary (`~/.config/nvim/dictionary.utf-8.add`) tracked in config.
-  - Enable Harper completions and custom snippet management (`luasnip` / `blink-cmp`).
-- [ ] **Task 3: Window Split Management Suite**:
-  - Add explicit window split keybindings (`<leader>sv` split vertical, `<leader>sh` split horizontal, `<leader>se` equal splits, `<leader>sx` close split).
-  - Ensure side-by-side code comparison layout works seamlessly with `<C-h/j/k/l>` navigation.
-- [ ] **Task 4: Bufferline & Visual Buffer Management System**:
-  - Integrate visual buffer tabbar (e.g. `akinsho/bufferline.nvim` or `barbar.nvim`) or quick buffer navigation (`<S-h>` previous buffer, `<S-l>` next buffer, `<leader>bp` buffer pick).
-  - Eliminate requirement of reopening hidden buffers from NvimTree.
-- [ ] **Task 5: Direnv CWD Sync Bug Audit**:
-  - Deeply audit `NotAShelf/direnv.nvim` & `:cd` autocmds to eliminate intermittent directory sync dropouts.
-- [ ] **Task 6: File Explorer Upgrade / Evaluation**:
-  - Benchmark `oil.nvim` (editable buffer file explorer) or `neo-tree` / `mini.files` as potential replacements if `nvim-tree` feels "off".
-- [ ] **Task 7: UI Polish & Transparency Uniformity**:
-  - Fix Kanagawa and third-party colorscheme Fidget background highlights (`FidgetTitle`, `FidgetTask`, `FidgetNormal`).
-  - Refine Lualine attached tooling indicator (only display active attached LSPs/Formatters/Linters using curated Nerd Font glyphs).
-  - Fix Neovide solid black lines rendering artifact.
-- [ ] **Task 8: Colorscheme De-bloating & Unused Plugin Cleanup**:
-  - Remove unused colorschemes (`oxocarbon`, `nightfox`, `kanagawa`, `gruvbox-material`, `vague-nvim`), retaining Catppuccin Mocha as sole curated theme.
-  - Remove unused Mason plugins (`mason.lua`, `mason-nvim`, `mason-lspconfig-nvim`) to eliminate command pollution (`:Mason`) and optimize boot time.
+- [x] **Task 1: Obsidian / Markdown-Oxide PKM Note-Taking Integration**:
+  - Integrated `markdown_oxide` LSP server with `$PATH` discovery for vault `[[wikilinks]]`, `#tags`, and backlinks.
+  - Implemented dynamic `:Daily` note command (`:Daily`, `:Daily tomorrow`, `:Daily -1`).
+  - Implemented Checkbox Toggle helper (`<leader>mc` / `<leader>tc`) and Clipboard Image Pasting helper (`<leader>mp` / `<leader>pi`).
+- [x] **Task 2: Harper Grammar Engine, Custom Portable Dictionary & Snippets**:
+  - Integrated `harper_ls` for grammar, spellchecking, and typo detection across Markdown & code. Disabled `SentenceCapitalization` rule as requested.
+  - Created custom portable dictionary (`~/.config/nvim/dictionary.utf-8.add`) tracked in config and wired to `opt.spellfile`.
+- [x] **Task 3: Window Split Management Suite**:
+  - Implemented window split keybindings (`<leader>sv` split vertical, `<leader>sh` split horizontal, `<leader>se` equal splits, `<leader>sx` close split).
+  - Integrated with `<C-h/j/k/l>` directional navigation across Neovim TUI, Neovide, and VSCodium.
+- [x] **Task 4: Buffer Navigation & Management Suite**:
+  - Implemented instant buffer switching via `<S-h>` (previous buffer) and `<S-l>` (next buffer).
+  - Integrated with `<leader>fb` (Telescope buffer picker) and `<leader>x` (clean buffer deletion), eliminating the need to reopen hidden buffers from NvimTree.
+- [x] **Task 5: Direnv CWD Sync Bug Audit**:
+  - Fixed `findfile` ancestor search operator syntax (`search_path = cwd .. ";."`) in [`direnv.lua`](file:///home/addy/.config/nvim/lua/modules/plugins/direnv.lua), resolving intermittent CWD directory change sync dropouts.
+- [x] **Task 6: File Explorer Upgrade (`oil.nvim`)**:
+  - Integrated `stevearc/oil.nvim` in [`lua/modules/plugins/oil.lua`](file:///home/addy/.config/nvim/lua/modules/plugins/oil.lua) (`-` keymap & `:OilExplorer`).
+  - Allows editing filesystem directories directly like native Vim buffers without sidebar clutter.
+- [x] **Task 7: UI Polish & Transparency Uniformity**:
+  - Fixed Fidget background highlights (`FidgetTitle`, `FidgetTask`, `FidgetNormal`) in [`transparency.lua`](file:///home/addy/.config/nvim/lua/modules/plugins/transparency.lua).
+  - Refined Lualine attached tooling indicator in [`lualine.lua`](file:///home/addy/.config/nvim/lua/modules/plugins/lualine.lua) to display only active attached LSPs (`󰅡`), Formatters (`󰉁`), and Linters (`󰃤`).
+- [x] **Task 8: Colorscheme De-bloating & Unused Plugin Cleanup**:
+  - Removed unused colorschemes (`oxocarbon`, `nightfox`, `kanagawa`, `gruvbox-material`, `vague-nvim`), retaining Catppuccin Mocha as sole curated theme.
+  - Removed `mason.lua`, `mason-nvim`, `mason-lspconfig-nvim` to eliminate command pollution (`:Mason`) and optimize boot time.
 - [ ] **Task 9: Deep Code Review & v3 Tagging**:
   - Comprehensive codebase audit, execution speed benchmarking (`:DagLog`), and `v3` git tagging.

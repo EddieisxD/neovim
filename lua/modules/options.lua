@@ -124,10 +124,11 @@ return {
     o.updatetime = 250
     o.hidden = true
 
-    --- Spell Check
+    --- Spell Check & Portable Dictionary
     o.spell = false
     o.spelllang = "en_us"
     opt.spelloptions:append("camel")
+    opt.spellfile = vim.fn.expand("~/.config/nvim/dictionary.utf-8.add")
 
     vim.cmd("cabbrev h tab help")
 

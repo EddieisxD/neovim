@@ -9,11 +9,13 @@ local last_synced_dir = nil
 local function sync_direnv(target_dir, verbose, force)
   if vim.fn.executable("direnv") ~= 1 then return end
 
-  target_dir = target_dir or vim.fn.getcwd()
+  target_dir = (target_dir and target_dir ~= "") and target_dir or vim.fn.getcwd()
 
-  local env_file = vim.fn.findfile(".envrc", target_dir .. ";")
+  -- Use Vim's upward ancestor search operator (target_dir .. ";.") to find .envrc / .env in target or parent directories
+  local search_path = target_dir .. ";."
+  local env_file = vim.fn.findfile(".envrc", search_path)
   if env_file == "" then
-    env_file = vim.fn.findfile(".env", target_dir .. ";")
+    env_file = vim.fn.findfile(".env", search_path)
   end
   if env_file == "" then return end
 
@@ -141,8 +143,9 @@ return {
 
     vim.api.nvim_create_user_command("DirenvStatus", function()
       local cwd = vim.fn.getcwd()
-      local env_file = vim.fn.findfile(".envrc", cwd .. ";")
-      if env_file == "" then env_file = vim.fn.findfile(".env", cwd .. ";") end
+      local search_path = cwd .. ";."
+      local env_file = vim.fn.findfile(".envrc", search_path)
+      if env_file == "" then env_file = vim.fn.findfile(".env", search_path) end
       if env_file ~= "" then
         vim.notify("Direnv file found: " .. env_file .. " (Last synced: " .. tostring(last_synced_dir) .. ")", vim.log.levels.INFO, { title = "direnv" })
       else

@@ -1,11 +1,12 @@
---- Lualine Statusline Module
---- Displays active LSP clients, formatters, and linters dynamically sourced from $PATH.
+--- Lualine Statusline & Top Tabline Bufferline Module
+--- Displays active LSP clients, formatters, and linters on statusline, and visual tab-scoped bufferline on top tabline.
 
 local dag_lib = require("library.dag")
 
 local function active_tools_status()
     local buf = vim.api.nvim_get_current_buf()
     local ft = vim.bo[buf].filetype
+    local parts = {}
 
     -- Active LSP Clients
     local clients = vim.lsp.get_clients({ bufnr = buf })
@@ -13,7 +14,9 @@ local function active_tools_status()
     for _, c in ipairs(clients) do
         table.insert(lsp_names, c.name)
     end
-    local lsp_str = #lsp_names > 0 and table.concat(lsp_names, ", ") or "off"
+    if #lsp_names > 0 then
+        table.insert(parts, "󰅡 " .. table.concat(lsp_names, ","))
+    end
 
     -- Active Formatters on $PATH
     local formatters = {
@@ -35,7 +38,9 @@ local function active_tools_status()
             table.insert(fmt_names, f)
         end
     end
-    local fmt_str = #fmt_names > 0 and table.concat(fmt_names, ",") or "lsp"
+    if #fmt_names > 0 then
+        table.insert(parts, "󰉁 " .. table.concat(fmt_names, ","))
+    end
 
     -- Active Linters on $PATH
     local linters = {
@@ -51,9 +56,11 @@ local function active_tools_status()
             table.insert(lnt_names, l)
         end
     end
-    local lnt_str = #lnt_names > 0 and table.concat(lnt_names, ",") or "none"
+    if #lnt_names > 0 then
+        table.insert(parts, "󰃤 " .. table.concat(lnt_names, ","))
+    end
 
-    return string.format(" lsp:[%s] fmt:[%s] lnt:[%s]", lsp_str, fmt_str, lnt_str)
+    return #parts > 0 and table.concat(parts, " ") or ""
 end
 
 return {
@@ -80,6 +87,24 @@ return {
                     lualine_x = { active_tools_status, "encoding", "filetype" },
                     lualine_y = { "progress" },
                     lualine_z = { "location" },
+                },
+                tabline = {
+                    lualine_a = {
+                        {
+                            "buffers",
+                            show_filename_only = true,
+                            hide_filename_extension = false,
+                            show_modified_status = true,
+                            mode = 0,
+                            max_length = function() return vim.o.columns * 3 / 4 end,
+                            symbols = {
+                                modified = " ●",
+                                alternate_file = "",
+                                directory = "",
+                            },
+                        },
+                    },
+                    lualine_z = { "tabs" },
                 },
             },
             config = function(_, opts)

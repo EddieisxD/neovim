@@ -29,6 +29,30 @@ local known_servers = {
       },
     },
   },
+  {
+    name = "markdown_oxide",
+    bin = "markdown-oxide",
+    cmd = { "markdown-oxide" },
+    ft = { "markdown" },
+  },
+  {
+    name = "harper_ls",
+    bin = "harper-ls",
+    cmd = { "harper-ls", "--stdio" },
+    ft = { "markdown", "text", "gitcommit", "lua", "python", "sh", "nix", "c", "cpp", "go", "rust" },
+    settings = {
+      ["harper-ls"] = {
+        userDictPath = vim.fn.expand("~/.config/nvim/dictionary.utf-8.add"),
+        linters = {
+          SpellCheck = true,
+          SpelledNumbers = false,
+          AnA = true,
+          SentenceCapitalization = false,
+          UnclosedQuotes = true,
+        },
+      },
+    },
+  },
   { name = "lua_ls",        bin = "lua-language-server",       cmd = { "lua-language-server" },       ft = { "lua" } },
   { name = "pyright",       bin = "pyright-langserver",        cmd = { "pyright-langserver", "--stdio" }, ft = { "python" } },
   { name = "pylsp",         bin = "pylsp",                     cmd = { "pylsp" },                     ft = { "python" } },
@@ -95,6 +119,20 @@ return {
       event = { "BufReadPre", "BufNewFile" },
       config = function()
         scan_and_enable_servers()
+
+        -- Dynamic :Daily command for markdown_oxide LSP
+        vim.api.nvim_create_user_command("Daily", function(args)
+          local input = args.args ~= "" and args.args or "today"
+          local clients = vim.lsp.get_clients({ name = "markdown_oxide" })
+          if #clients > 0 then
+            vim.lsp.buf.execute_command({
+              command = "jump",
+              arguments = { input }
+            })
+          else
+            vim.notify("markdown-oxide LSP is not attached", vim.log.levels.WARN, { title = "PKM" })
+          end
+        end, { nargs = "*", desc = "Open or create daily note via markdown-oxide" })
       end,
     },
   },
@@ -149,7 +187,7 @@ return {
         if name then
           local clients = vim.lsp.get_clients({ name = name })
           for _, c in ipairs(clients) do
-            vim.lsp.stop_client(c.id)
+            c:stop()
           end
           pcall(vim.lsp.enable, name)
         else
@@ -159,12 +197,12 @@ return {
         if name then
           local clients = vim.lsp.get_clients({ name = name })
           for _, c in ipairs(clients) do
-            vim.lsp.stop_client(c.id)
+            c:stop()
           end
           vim.notify("Stopped LSP: " .. name, vim.log.levels.INFO, { title = "LSP" })
         else
           for _, c in ipairs(vim.lsp.get_clients()) do
-            vim.lsp.stop_client(c.id)
+            c:stop()
           end
           vim.notify("Stopped all LSP clients", vim.log.levels.INFO, { title = "LSP" })
         end
