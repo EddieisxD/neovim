@@ -1,5 +1,5 @@
 --- All-or-Nothing Transparency Engine
---- Toggles full UI transparency (including NvimTree, Telescope, Floats, Fidget, Statuslines & Top Bufferline)
+--- Toggles full UI transparency (including NvimTree, Telescope, Floats, Fidget & Statuslines)
 --- and automatically persists transparency state cross-session in bundle_state.json.
 
 local dag_lib = require("library.dag")
@@ -14,10 +14,7 @@ local all_groups = {
   "SignColumn", "LineNr", "FoldColumn",
   "VertSplit", "WinSeparator",
   "StatusLine", "StatusLineNC",
-  "TabLine", "TabLineFill", "TabLineSel", "MsgArea",
-  -- Top Bufferline Highlights
-  "lualine_c_normal", "lualine_a_buffers_active", "lualine_b_buffers_inactive",
-  "lualine_c_buffers_inactive", "lualine_a_buffers_inactive",
+  "TabLineFill", "MsgArea",
   -- Fidget Notifications
   "FidgetTitle", "FidgetTask", "FidgetNormal",
   -- NvimTree File Explorer
@@ -62,7 +59,10 @@ function M.disable()
   if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
     cs_mod.api.set_colorscheme(scheme)
   else
-    pcall(vim.cmd.colorscheme, scheme)
+    local ok_scheme = pcall(vim.cmd.colorscheme, scheme)
+    if not ok_scheme then
+      pcall(vim.cmd.colorscheme, "catppuccin-mocha")
+    end
   end
 
   vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })

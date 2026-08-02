@@ -1,5 +1,5 @@
---- Lualine Statusline & Top Tabline Bufferline Module
---- Displays active LSP clients, formatters, and linters on statusline, and visual tab-scoped bufferline on top tabline.
+--- Lualine Statusline Module
+--- Displays active LSP clients, formatters, and linters dynamically sourced from $PATH with clean glyph grouping.
 
 local dag_lib = require("library.dag")
 
@@ -87,24 +87,6 @@ return {
                     lualine_x = { active_tools_status, "encoding", "filetype" },
                     lualine_y = { "progress" },
                     lualine_z = { "location" },
-                },
-                tabline = {
-                    lualine_a = {
-                        {
-                            "buffers",
-                            show_filename_only = true,
-                            hide_filename_extension = false,
-                            show_modified_status = true,
-                            mode = 0,
-                            max_length = function() return vim.o.columns * 3 / 4 end,
-                            symbols = {
-                                modified = " ●",
-                                alternate_file = "",
-                                directory = "",
-                            },
-                        },
-                    },
-                    lualine_z = { "tabs" },
                 },
             },
             config = function(_, opts)
