@@ -77,7 +77,7 @@ return {
         code = { enabled = true },
         checkbox = { enabled = true },
         bullet = {
-          icons = { "●", "○", "◆", "◇" },
+          icons = { "●", "○", "⦿", "⊙" },
         },
       },
       config = function(_, opts)

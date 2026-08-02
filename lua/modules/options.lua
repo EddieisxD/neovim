@@ -33,12 +33,13 @@ return {
     o.linebreak = true
     o.textwidth = 0
 
-    --- Gutter & Line Numbers (Clean 2-column signcolumn with standard foldcolumn)
+    --- Gutter & Line Numbers (Clean statuscolumn with spacer between line numbers and signcolumn)
     opt.number = state.number ~= false
     opt.relativenumber = state.relativenumber ~= false
     opt.numberwidth = 4
     opt.signcolumn = "yes:2"
     opt.foldcolumn = "1"
+    opt.statuscolumn = "%= %l  %s %C"
 
     opt.fillchars = {
       eob = " ",
@@ -80,14 +81,14 @@ return {
     -- Link MsgArea to Normal background
     vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
 
-    -- Curated Diagnostic Signs & Floating Window Settings (Matching render-markdown.nvim aesthetic)
+    -- Curated Diagnostic Signs & Floating Window Settings (Sleek Sparkle hint icon)
     vim.diagnostic.config({
       signs = {
         text = {
           [vim.diagnostic.severity.ERROR] = "󰅚 ",
           [vim.diagnostic.severity.WARN]  = "󰀦 ",
           [vim.diagnostic.severity.INFO]  = "󰋼 ",
-          [vim.diagnostic.severity.HINT]  = "󰌵 ",
+          [vim.diagnostic.severity.HINT]  = "󰛩 ",
         },
       },
       virtual_text = {
