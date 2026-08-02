@@ -1,5 +1,6 @@
 --- Lualine Statusline & Top Tabline Bufferline Module
---- Displays active LSP clients, formatters, and linters on statusline, and visual tab-scoped bufferline on top tabline.
+--- Displays active LSP clients, formatters, and linters on statusline, project root directory on lualine_c,
+--- and visual tab-scoped bufferline on top tabline.
 
 local dag_lib = require("library.dag")
 
@@ -7,6 +8,7 @@ local function resolve_lualine_theme(scheme)
     scheme = scheme or vim.g.colors_name or "catppuccin-mocha"
     local theme_tbl = nil
 
+    -- 1. Catppuccin special handling via catppuccin's lualine generator
     if scheme:match("^catppuccin") then
         local flavour = scheme:gsub("^catppuccin%-", "")
         if flavour == "catppuccin" or flavour == "" then flavour = "mocha" end
@@ -19,27 +21,40 @@ local function resolve_lualine_theme(scheme)
         end
     end
 
+    -- 2. Try loading explicit Lualine theme module for the scheme
     if not theme_tbl then
-        local ok_l, lualine_theme = pcall(require, "lualine.themes." .. scheme:gsub("-", "_"))
+        local clean_name = scheme:gsub("-", "_")
+        local ok_l, lualine_theme = pcall(require, "lualine.themes." .. clean_name)
         if ok_l and type(lualine_theme) == "table" then
             theme_tbl = lualine_theme
+        else
+            local ok_h, lualine_h = pcall(require, "lualine.themes." .. scheme)
+            if ok_h and type(lualine_h) == "table" then
+                theme_tbl = lualine_h
+            end
         end
     end
 
-    -- Per lualine.nvim documentation: clear section 'c' background (bg = nil) for global container bar transparency
+    -- 3. If transparent, clear background on section 'c' and 'b' for global container bar transparency
     if type(theme_tbl) == "table" and _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true then
         theme_tbl = vim.deepcopy(theme_tbl)
-        for _, mode in ipairs({ "normal", "inactive", "insert", "visual", "replace", "command" }) do
-            if theme_tbl[mode] and theme_tbl[mode].c then
-                theme_tbl[mode].c.bg = nil
-            end
-            if theme_tbl[mode] and theme_tbl[mode].b then
-                theme_tbl[mode].b.bg = nil
+        for _, mode in pairs(theme_tbl) do
+            if type(mode) == "table" then
+                if mode.c then mode.c.bg = nil end
+                if mode.b then mode.b.bg = nil end
             end
         end
+        return theme_tbl
     end
 
-    return theme_tbl or scheme:gsub("-", "_")
+    -- Return resolved theme table or "auto" fallback (Lualine auto-samples active colorscheme highlights!)
+    return theme_tbl or "auto"
+end
+
+local function root_dir_display()
+    local cwd = vim.fn.getcwd()
+    local folder = vim.fn.fnamemodify(cwd, ":t")
+    return "󰉋 " .. folder
 end
 
 local function active_tools_status()
@@ -115,15 +130,15 @@ return {
             opts = {
                 options = {
                     theme = resolve_lualine_theme("catppuccin-mocha"),
-                    component_separators = { left = "", right = "" },
+                    component_separators = { left = "│", right = "│" },
                     section_separators = { left = "", right = "" },
                     globalstatus = true,
                 },
                 sections = {
                     lualine_a = { "mode" },
                     lualine_b = { "branch", "diff", "diagnostics" },
-                    lualine_c = { { "filename", path = 1 } },
-                    lualine_x = { active_tools_status, "encoding", "filetype" },
+                    lualine_c = { root_dir_display },
+                    lualine_x = { active_tools_status, "filetype" },
                     lualine_y = { "progress" },
                     lualine_z = { "location" },
                 },
@@ -175,8 +190,9 @@ return {
             config = function(_, opts)
                 local ok, lualine = pcall(require, "lualine")
                 if ok then
+                    local scheme = vim.g.colors_name or "catppuccin-mocha"
                     opts.options = opts.options or {}
-                    opts.options.theme = resolve_lualine_theme(vim.g.colors_name)
+                    opts.options.theme = resolve_lualine_theme(scheme)
                     lualine.setup(opts)
                 end
 
@@ -187,7 +203,8 @@ return {
                     callback = function()
                         local ok_l, lualine_inst = pcall(require, "lualine")
                         if ok_l and type(lualine_inst.set_theme) == "function" then
-                            local resolved = resolve_lualine_theme(vim.g.colors_name)
+                            local scheme = vim.g.colors_name or "catppuccin-mocha"
+                            local resolved = resolve_lualine_theme(scheme)
                             pcall(lualine_inst.set_theme, resolved)
                         end
                     end,

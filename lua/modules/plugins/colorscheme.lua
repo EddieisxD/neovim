@@ -36,6 +36,7 @@ M.curated_themes = {
 function M.set_colorscheme(name)
   name = (name and name ~= "") and name or M.default_scheme
 
+  local is_trans = _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true
   local ok = false
 
   -- Catppuccin Flavours
@@ -44,7 +45,21 @@ function M.set_colorscheme(name)
     if ok_cat then
       local flavour = name:gsub("^catppuccin%-", "")
       if flavour == "catppuccin" or flavour == "" then flavour = "mocha" end
+      pcall(cat.setup, {
+        flavour = flavour,
+        transparent_background = is_trans,
+        integrations = {
+          cmp = true,
+          gitsigns = true,
+          nvimtree = true,
+          treesitter = true,
+          fidget = true,
+          lualine = true,
+          native_lsp = { enabled = true },
+        },
+      })
       pcall(cat.load, flavour)
+      vim.g.colors_name = name
       ok = true
     end
   end
@@ -52,19 +67,23 @@ function M.set_colorscheme(name)
   -- Fallback to standard vim.cmd.colorscheme if not loaded via catppuccin API
   if not ok then
     ok = pcall(vim.cmd.colorscheme, name)
+    if ok then
+      vim.g.colors_name = name
+    end
   end
 
   if not ok then
     logger.warn(string.format("[Colorscheme Module] Theme '%s' failed to load, falling back to '%s'", name, M.default_scheme))
     pcall(vim.cmd.colorscheme, M.default_scheme)
+    vim.g.colors_name = M.default_scheme
   end
 
   -- Emit ColorScheme event so transparency and lualine update reactively
-  pcall(vim.cmd, "doautocmd ColorScheme " .. name)
+  pcall(vim.cmd, "doautocmd ColorScheme " .. vim.g.colors_name)
 
-  logger.info(string.format("[Colorscheme Module] Applied theme '%s'", name))
+  logger.info(string.format("[Colorscheme Module] Applied theme '%s'", vim.g.colors_name))
   if _G.Bundle then
-    _G.Bundle.state.colorscheme = name
+    _G.Bundle.state.colorscheme = vim.g.colors_name
     _G.Bundle:save_state()
   end
   return true
@@ -106,6 +125,8 @@ return {
       config = function(_, opts)
         local ok, catppuccin = pcall(require, "catppuccin")
         if ok then
+          local is_trans = _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true
+          opts.transparent_background = is_trans
           catppuccin.setup(opts)
         end
         local state = _G.Bundle and _G.Bundle.state or {}
