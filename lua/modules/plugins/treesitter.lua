@@ -11,6 +11,7 @@ local ignored_filetypes = {
   pager = true,
   fidget = true,
   text = true,
+  lazy = true,
   ["blink-cmp-menu"] = true,
   ["blink-cmp-documentation"] = true,
   ["dap-repl"] = true,

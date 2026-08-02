@@ -1,7 +1,25 @@
---- Lualine Statusline Module
---- Displays active LSP clients, formatters, and linters dynamically sourced from $PATH with clean glyph grouping.
+--- Lualine Statusline & Top Tabline Bufferline Module
+--- Displays active LSP clients, formatters, and linters on statusline, and visual tab-scoped bufferline on top tabline.
 
 local dag_lib = require("library.dag")
+
+local function resolve_lualine_theme(scheme)
+    scheme = scheme or vim.g.colors_name or "catppuccin-mocha"
+    if scheme:match("^catppuccin") then
+        local flavour = scheme:gsub("^catppuccin%-", "")
+        if flavour == "catppuccin" or flavour == "" then flavour = "mocha" end
+        local ok_cat, cat_lualine = pcall(require, "catppuccin.utils.lualine")
+        if ok_cat and type(cat_lualine) == "function" then
+            local ok_res, theme_tbl = pcall(cat_lualine, flavour)
+            if ok_res and type(theme_tbl) == "table" then
+                return theme_tbl
+            end
+        end
+    end
+
+    local alt_name = scheme:gsub("-", "_")
+    return alt_name
+end
 
 local function active_tools_status()
     local buf = vim.api.nvim_get_current_buf()
@@ -75,7 +93,7 @@ return {
             event = "VimEnter",
             opts = {
                 options = {
-                    theme = "auto",
+                    theme = resolve_lualine_theme("catppuccin-mocha"),
                     component_separators = { left = "│", right = "│" },
                     section_separators = { left = "", right = "" },
                     globalstatus = true,
@@ -88,12 +106,45 @@ return {
                     lualine_y = { "progress" },
                     lualine_z = { "location" },
                 },
+                tabline = {
+                    lualine_a = {
+                        {
+                            "buffers",
+                            show_filename_only = true,
+                            hide_filename_extension = false,
+                            show_modified_status = true,
+                            mode = 0,
+                            max_length = function() return vim.o.columns * 3 / 4 end,
+                            symbols = {
+                                modified = " ●",
+                                alternate_file = "",
+                                directory = "",
+                            },
+                        },
+                    },
+                    lualine_z = { "tabs" },
+                },
             },
             config = function(_, opts)
                 local ok, lualine = pcall(require, "lualine")
                 if ok then
-                    lualine.setup(opts or {})
+                    opts.options = opts.options or {}
+                    opts.options.theme = resolve_lualine_theme(vim.g.colors_name)
+                    lualine.setup(opts)
                 end
+
+                -- Auto-synchronize Lualine theme non-destructively on ColorScheme event
+                local augroup = vim.api.nvim_create_augroup("LualineThemeSync", { clear = true })
+                vim.api.nvim_create_autocmd("ColorScheme", {
+                    group = augroup,
+                    callback = function()
+                        local ok_l, lualine_inst = pcall(require, "lualine")
+                        if ok_l and type(lualine_inst.set_theme) == "function" then
+                            local resolved = resolve_lualine_theme(vim.g.colors_name)
+                            pcall(lualine_inst.set_theme, resolved)
+                        end
+                    end,
+                })
             end,
         },
     },

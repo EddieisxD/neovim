@@ -52,7 +52,16 @@ inputs:
 
   # General plugin specs list
   config.specs.general = with pkgs.vimPlugins; [
+    # Curated Colorschemes
     catppuccin-nvim
+    gruvbox-material
+    kanagawa-nvim
+    nightfox-nvim
+    oldworld-nvim
+    oxocarbon-nvim
+    vague-nvim
+
+    # Treesitter & Plugins
     nvim-treesitter.withAllGrammars
     nvim-treesitter-textobjects
     config.nvim-lib.neovimPlugins.direnv-nvim
