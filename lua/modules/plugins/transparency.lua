@@ -8,13 +8,14 @@ local logger = require("library.logger")
 local M = {}
 
 --- Complete list of UI highlight groups cleared when transparency is enabled
+--- (Note: TabLineSel is intentionally excluded so active buffer pills remain colored by the active theme)
 local all_groups = {
   "Normal", "NormalNC", "NormalFloat", "FloatBorder",
   "NonText", "EndOfBuffer",
   "SignColumn", "LineNr", "CursorLineNr", "FoldColumn",
   "VertSplit", "WinSeparator",
   "StatusLine", "StatusLineNC",
-  "TabLine", "TabLineFill", "TabLineSel", "MsgArea",
+  "TabLine", "TabLineFill", "MsgArea",
   -- Top Bufferbar Container Layer Highlights
   "lualine_c_normal", "lualine_c_inactive", "lualine_c_replace", "lualine_c_insert", "lualine_c_visual", "lualine_c_command",
   "lualine_b_normal", "lualine_b_inactive", "lualine_a_buffers_inactive", "lualine_b_buffers_inactive", "lualine_c_buffers_inactive",
