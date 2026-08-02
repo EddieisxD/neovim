@@ -40,6 +40,7 @@ local known_servers = {
     bin = "harper-ls",
     cmd = { "harper-ls", "--stdio" },
     ft = { "markdown", "text", "gitcommit", "lua", "python", "sh", "nix", "c", "cpp", "go", "rust" },
+    auto_start = false,
     settings = {
       ["harper-ls"] = {
         userDictPath = vim.fn.expand("~/.config/nvim/dictionary.utf-8.add"),
@@ -75,11 +76,7 @@ local function scan_and_enable_servers()
 
   for _, s in ipairs(known_servers) do
     if not active_servers[s.name] and vim.fn.executable(s.bin) == 1 then
-      active_servers[s.name] = true
-      newly_enabled = newly_enabled + 1
-
-      logger.info(string.format("[LSP Environment Engine] Discovered binary '%s' on $PATH for LSP '%s'", s.bin, s.name))
-
+      local auto = s.auto_start ~= false
       local server_cmd = s.cmd or { s.bin }
 
       if vim.lsp and vim.lsp.config then
@@ -89,15 +86,26 @@ local function scan_and_enable_servers()
           filetypes = s.ft,
           settings = s.settings or {},
         })
-        vim.lsp.enable(s.name)
+        if auto then
+          active_servers[s.name] = true
+          vim.lsp.enable(s.name)
+          newly_enabled = newly_enabled + 1
+          logger.info(string.format("[LSP Environment Engine] Discovered binary '%s' on $PATH for LSP '%s'", s.bin, s.name))
+        else
+          logger.info(string.format("[LSP Environment Engine] Registered LSP '%s' (manual start only)", s.name))
+        end
       else
         -- Fallback to nvim-lspconfig
-        local ok, lspconfig = pcall(require, "lspconfig")
-        if ok and lspconfig[s.name] then
-          lspconfig[s.name].setup({
-            cmd = server_cmd,
-            settings = s.settings or {},
-          })
+        if auto then
+          active_servers[s.name] = true
+          newly_enabled = newly_enabled + 1
+          local ok, lspconfig = pcall(require, "lspconfig")
+          if ok and lspconfig[s.name] then
+            lspconfig[s.name].setup({
+              cmd = server_cmd,
+              settings = s.settings or {},
+            })
+          end
         end
       end
     end
@@ -199,15 +207,18 @@ return {
           for _, c in ipairs(clients) do
             c:stop()
           end
+          active_servers[name] = nil
           vim.notify("Stopped LSP: " .. name, vim.log.levels.INFO, { title = "LSP" })
         else
           for _, c in ipairs(vim.lsp.get_clients()) do
             c:stop()
           end
+          active_servers = {}
           vim.notify("Stopped all LSP clients", vim.log.levels.INFO, { title = "LSP" })
         end
       elseif sub == "start" or sub == "enable" then
         if name then
+          active_servers[name] = true
           if vim.lsp and vim.lsp.enable then
             pcall(vim.lsp.enable, name)
           end
