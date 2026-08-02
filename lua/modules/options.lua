@@ -33,13 +33,12 @@ return {
     o.linebreak = true
     o.textwidth = 0
 
-    --- Gutter & Line Numbers (Clean statuscolumn with spacer between line numbers and signcolumn)
+    --- Gutter & Line Numbers (Clean 2-column signcolumn with zero foldcolumn)
     opt.number = state.number ~= false
     opt.relativenumber = state.relativenumber ~= false
     opt.numberwidth = 4
     opt.signcolumn = "yes:2"
-    opt.foldcolumn = "1"
-    opt.statuscolumn = "%= %l  %s %C"
+    opt.foldcolumn = "0"
 
     opt.fillchars = {
       eob = " ",
