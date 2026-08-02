@@ -78,8 +78,8 @@ function M.set_colorscheme(name)
     vim.g.colors_name = M.default_scheme
   end
 
-  -- Emit ColorScheme event so transparency and lualine update reactively
-  pcall(vim.cmd, "doautocmd ColorScheme " .. vim.g.colors_name)
+  -- Trigger ColorScheme autocommands natively via Neovim API so transparency & lualine update reactively
+  pcall(vim.api.nvim_exec_autocmds, "ColorScheme", { pattern = vim.g.colors_name })
 
   logger.info(string.format("[Colorscheme Module] Applied theme '%s'", vim.g.colors_name))
   if _G.Bundle then

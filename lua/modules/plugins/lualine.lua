@@ -163,8 +163,8 @@ return {
                                 directory = "",
                             },
                             buffers_color = {
-                                active = { fg = "#cdd6f4", bg = "#313244", gui = "bold" },
-                                inactive = { fg = "#6c7086", bg = "NONE" },
+                                active = "TabLineSel",
+                                inactive = "TabLine",
                             },
                         },
                     },
@@ -174,8 +174,8 @@ return {
                             mode = 0,
                             max_length = function() return vim.o.columns / 4 end,
                             tabs_color = {
-                                active = { fg = "#cdd6f4", bg = "#313244", gui = "bold" },
-                                inactive = { fg = "#6c7086", bg = "NONE" },
+                                active = "TabLineSel",
+                                inactive = "TabLine",
                             },
                         },
                         -- Right corner Normal-highlighted spacer for Ghostty terminal window padding color sampling
@@ -196,16 +196,17 @@ return {
                     lualine.setup(opts)
                 end
 
-                -- Auto-synchronize Lualine theme non-destructively on ColorScheme event
+                -- Synchronize Lualine setup across both sections and tabline on ColorScheme event
                 local augroup = vim.api.nvim_create_augroup("LualineThemeSync", { clear = true })
                 vim.api.nvim_create_autocmd("ColorScheme", {
                     group = augroup,
                     callback = function(ev)
                         local ok_l, lualine_inst = pcall(require, "lualine")
-                        if ok_l and type(lualine_inst.set_theme) == "function" then
+                        if ok_l then
                             local scheme = (ev and ev.match ~= "" and ev.match) or vim.g.colors_name or "catppuccin-mocha"
-                            local resolved = resolve_lualine_theme(scheme)
-                            pcall(lualine_inst.set_theme, resolved)
+                            opts.options = opts.options or {}
+                            opts.options.theme = resolve_lualine_theme(scheme)
+                            pcall(lualine_inst.setup, opts)
                         end
                     end,
                 })
