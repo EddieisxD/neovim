@@ -58,7 +58,7 @@
   - Implemented window split keybindings (`<leader>sv` split vertical, `<leader>sh` split horizontal, `<leader>se` equal splits, `<leader>sx` close split).
   - Integrated with `<C-h/j/k/l>` directional navigation across Neovim TUI, Neovide, and VSCodium.
 - [x] **Task 4: Buffer Navigation & Management Suite**:
-  - Implemented instant buffer switching via `<S-h>` (previous buffer) and `<S-l>` (next buffer).
+  - Implemented instant buffer switching via `[b` (previous buffer) and `]b` (next buffer).
   - Integrated with `<leader>fb` (Telescope buffer picker) and `<leader>x` (clean buffer deletion), eliminating the need to reopen hidden buffers from NvimTree.
 - [x] **Task 5: Direnv CWD Sync Bug Audit**:
   - Fixed `findfile` ancestor search operator syntax (`search_path = cwd .. ";."`) in [`direnv.lua`](file:///home/addy/.config/nvim/lua/modules/plugins/direnv.lua), resolving intermittent CWD directory change sync dropouts.
@@ -71,5 +71,5 @@
 - [x] **Task 8: Colorscheme De-bloating & Unused Plugin Cleanup**:
   - Removed unused colorschemes (`oxocarbon`, `nightfox`, `kanagawa`, `gruvbox-material`, `vague-nvim`), retaining Catppuccin Mocha as sole curated theme.
   - Removed `mason.lua`, `mason-nvim`, `mason-lspconfig-nvim` to eliminate command pollution (`:Mason`) and optimize boot time.
-- [ ] **Task 9: Deep Code Review & v3 Tagging**:
-  - Comprehensive codebase audit, execution speed benchmarking (`:DagLog`), and `v3` git tagging.
+- [x] **Task 9: Deep Code Review & v3 Tagging**:
+  - Comprehensive codebase audit, unit test suite verification (`5 Passed, 0 Failed`), and Git tagging **`v3`** (`35d6972`).
