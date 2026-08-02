@@ -5,7 +5,7 @@
 local dag_lib = require("library.dag")
 
 local function resolve_lualine_theme(scheme)
-    scheme = scheme or vim.g.colors_name or "catppuccin-mocha"
+    scheme = scheme or (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
     local theme_tbl = nil
 
     -- 1. Catppuccin special handling via catppuccin's lualine generator
@@ -129,7 +129,7 @@ return {
             event = "VimEnter",
             opts = {
                 options = {
-                    theme = resolve_lualine_theme("catppuccin-mocha"),
+                    theme = "auto",
                     component_separators = { left = "│", right = "│" },
                     section_separators = { left = "", right = "" },
                     globalstatus = true,
@@ -190,7 +190,7 @@ return {
             config = function(_, opts)
                 local ok, lualine = pcall(require, "lualine")
                 if ok then
-                    local scheme = vim.g.colors_name or "catppuccin-mocha"
+                    local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
                     opts.options = opts.options or {}
                     opts.options.theme = resolve_lualine_theme(scheme)
                     lualine.setup(opts)
@@ -200,10 +200,10 @@ return {
                 local augroup = vim.api.nvim_create_augroup("LualineThemeSync", { clear = true })
                 vim.api.nvim_create_autocmd("ColorScheme", {
                     group = augroup,
-                    callback = function()
+                    callback = function(ev)
                         local ok_l, lualine_inst = pcall(require, "lualine")
                         if ok_l and type(lualine_inst.set_theme) == "function" then
-                            local scheme = vim.g.colors_name or "catppuccin-mocha"
+                            local scheme = (ev and ev.match ~= "" and ev.match) or vim.g.colors_name or "catppuccin-mocha"
                             local resolved = resolve_lualine_theme(scheme)
                             pcall(lualine_inst.set_theme, resolved)
                         end
