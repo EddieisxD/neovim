@@ -1,5 +1,5 @@
 --- All-or-Nothing Transparency Engine
---- Toggles full UI transparency (including NvimTree, Telescope, Floats, Fidget, Statuslines & Top Bufferline)
+--- Toggles full UI transparency (including NvimTree, Telescope, Floats, Fidget, Statuslines, SignColumn Signs, Top Tabbar Layer & Top Bufferline)
 --- and automatically persists transparency state cross-session in bundle_state.json.
 
 local dag_lib = require("library.dag")
@@ -11,10 +11,16 @@ local M = {}
 local all_groups = {
   "Normal", "NormalNC", "NormalFloat", "FloatBorder",
   "NonText", "EndOfBuffer",
-  "SignColumn", "LineNr", "FoldColumn",
+  "SignColumn", "LineNr", "CursorLineNr", "FoldColumn",
   "VertSplit", "WinSeparator",
   "StatusLine", "StatusLineNC",
-  "TabLineFill", "MsgArea",
+  "TabLine", "TabLineFill", "TabLineSel", "MsgArea",
+  -- Top Bufferbar Container Layer Highlights
+  "lualine_c_normal", "lualine_c_inactive", "lualine_c_replace", "lualine_c_insert", "lualine_c_visual", "lualine_c_command",
+  "lualine_b_normal", "lualine_b_inactive", "lualine_a_buffers_inactive", "lualine_b_buffers_inactive", "lualine_c_buffers_inactive",
+  -- Sign Column Git & LSP Diagnostics Highlights
+  "GitSignsAdd", "GitSignsChange", "GitSignsDelete", "GitSignsTopdelete", "GitSignsChangedelete", "GitSignsUntracked",
+  "DiagnosticSignError", "DiagnosticSignWarn", "DiagnosticSignInfo", "DiagnosticSignHint",
   -- Fidget Notifications
   "FidgetTitle", "FidgetTask", "FidgetNormal",
   -- NvimTree File Explorer

@@ -76,6 +76,9 @@ return {
         heading = { enabled = true },
         code = { enabled = true },
         checkbox = { enabled = true },
+        bullet = {
+          icons = { "●", "○", "◆", "◇" },
+        },
       },
       config = function(_, opts)
         local ok, rm = pcall(require, "render-markdown")

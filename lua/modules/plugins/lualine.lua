@@ -5,20 +5,41 @@ local dag_lib = require("library.dag")
 
 local function resolve_lualine_theme(scheme)
     scheme = scheme or vim.g.colors_name or "catppuccin-mocha"
+    local theme_tbl = nil
+
     if scheme:match("^catppuccin") then
         local flavour = scheme:gsub("^catppuccin%-", "")
         if flavour == "catppuccin" or flavour == "" then flavour = "mocha" end
         local ok_cat, cat_lualine = pcall(require, "catppuccin.utils.lualine")
         if ok_cat and type(cat_lualine) == "function" then
-            local ok_res, theme_tbl = pcall(cat_lualine, flavour)
-            if ok_res and type(theme_tbl) == "table" then
-                return theme_tbl
+            local ok_res, res = pcall(cat_lualine, flavour)
+            if ok_res and type(res) == "table" then
+                theme_tbl = res
             end
         end
     end
 
-    local alt_name = scheme:gsub("-", "_")
-    return alt_name
+    if not theme_tbl then
+        local ok_l, lualine_theme = pcall(require, "lualine.themes." .. scheme:gsub("-", "_"))
+        if ok_l and type(lualine_theme) == "table" then
+            theme_tbl = lualine_theme
+        end
+    end
+
+    -- Per lualine.nvim documentation: clear section 'c' background (bg = nil) for global container bar transparency
+    if type(theme_tbl) == "table" and _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true then
+        theme_tbl = vim.deepcopy(theme_tbl)
+        for _, mode in ipairs({ "normal", "inactive", "insert", "visual", "replace", "command" }) do
+            if theme_tbl[mode] and theme_tbl[mode].c then
+                theme_tbl[mode].c.bg = nil
+            end
+            if theme_tbl[mode] and theme_tbl[mode].b then
+                theme_tbl[mode].b.bg = nil
+            end
+        end
+    end
+
+    return theme_tbl or scheme:gsub("-", "_")
 end
 
 local function active_tools_status()
@@ -108,6 +129,12 @@ return {
                 },
                 tabline = {
                     lualine_a = {
+                        -- Left corner Normal-highlighted spacer for Ghostty terminal window padding color sampling
+                        {
+                            function() return " " end,
+                            color = "Normal",
+                            padding = 0,
+                        },
                         {
                             "buffers",
                             show_filename_only = true,
@@ -120,9 +147,21 @@ return {
                                 alternate_file = "",
                                 directory = "",
                             },
+                            buffers_color = {
+                                active = { fg = "#cdd6f4", bg = "#313244", gui = "bold" },
+                                inactive = { fg = "#6c7086", bg = "NONE" },
+                            },
                         },
                     },
-                    lualine_z = { "tabs" },
+                    lualine_z = {
+                        "tabs",
+                        -- Right corner Normal-highlighted spacer for Ghostty terminal window padding color sampling
+                        {
+                            function() return " " end,
+                            color = "Normal",
+                            padding = 0,
+                        },
+                    },
                 },
             },
             config = function(_, opts)
