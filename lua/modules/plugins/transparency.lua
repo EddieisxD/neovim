@@ -1,13 +1,13 @@
---- All-or-Nothing Transparency Engine
---- Toggles full UI transparency (including NvimTree, Telescope, Floats, Fidget, Statuslines, SignColumn Signs, Top Tabbar Layer & Top Bufferline)
---- and automatically persists transparency state cross-session in bundle_state.json.
+--- Unified All-or-Nothing Transparency Engine
+--- Provides a single factored-out entrypoint (M.apply_transparency) for applying UI transparency
+--- across boot initialization, colorscheme changes, and user command toggles.
 
 local dag_lib = require("library.dag")
 local logger = require("library.logger")
 
 local M = {}
 
---- Complete list of UI highlight groups for total transparency
+--- Complete list of UI highlight groups cleared when transparency is enabled
 local all_groups = {
   "Normal", "NormalNC", "NormalFloat", "FloatBorder",
   "NonText", "EndOfBuffer",
@@ -34,51 +34,61 @@ local all_groups = {
   "Pmenu", "PmenuSbar", "PmenuThumb",
 }
 
---- Apply transparency over all UI elements
+--- Single factored-out function that applies or clears transparency based on Bundle.state.transparent
+function M.apply_transparency()
+  local is_trans = _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true
+
+  if is_trans then
+    for _, g in ipairs(all_groups) do
+      vim.api.nvim_set_hl(0, g, { bg = "none" })
+    end
+    vim.api.nvim_set_hl(0, "MsgArea", { bg = "none" })
+    logger.info("[Transparency Engine] Applied UI transparency (bg = none)")
+  else
+    for _, g in ipairs(all_groups) do
+      pcall(vim.cmd, "hi clear " .. g)
+    end
+    vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
+    logger.info("[Transparency Engine] Cleared transparency overrides (solid backgrounds restored)")
+  end
+end
+
+--- Enable transparency state, persist to disk, and synchronize UI
 function M.enable()
   if _G.Bundle then
     _G.Bundle.state.transparent = true
     _G.Bundle:save_state()
   end
-  for _, g in ipairs(all_groups) do
-    vim.api.nvim_set_hl(0, g, { bg = "none" })
+
+  local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
+  local ok_cs, cs_mod = pcall(require, "modules.plugins.colorscheme")
+  if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
+    cs_mod.api.set_colorscheme(scheme)
   end
-  vim.api.nvim_set_hl(0, "MsgArea", { bg = "none" })
-  logger.info("[Transparency Engine] Enabled full UI transparency")
+
+  M.apply_transparency()
 end
 
---- Disable transparency and restore solid colorscheme backgrounds
+--- Disable transparency state, persist to disk, and restore solid theme
 function M.disable()
   if _G.Bundle then
     _G.Bundle.state.transparent = false
     _G.Bundle:save_state()
   end
 
-  -- Clear namespace 0 overrides on all targeted groups so colorscheme background is cleanly re-populated
-  for _, g in ipairs(all_groups) do
-    pcall(vim.cmd, "hi clear " .. g)
-  end
-
   local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
-
   local ok_cs, cs_mod = pcall(require, "modules.plugins.colorscheme")
   if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
     cs_mod.api.set_colorscheme(scheme)
-  else
-    local ok_scheme = pcall(vim.cmd.colorscheme, scheme)
-    if not ok_scheme then
-      pcall(vim.cmd.colorscheme, "catppuccin-mocha")
-    end
   end
 
-  -- Non-destructively refresh Lualine theme
+  M.apply_transparency()
+
+  -- Refresh Lualine theme non-destructively
   local ok_l, lualine_inst = pcall(require, "lualine")
   if ok_l and type(lualine_inst.set_theme) == "function" then
     pcall(lualine_inst.set_theme, scheme)
   end
-
-  vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
-  logger.info(string.format("[Transparency Engine] Disabled transparency, restored solid colorscheme '%s'", scheme))
 end
 
 --- Toggle transparency state on or off & persist to disk
@@ -107,23 +117,17 @@ return {
       M.enable()
     end, { desc = "Apply transparency over current colorscheme" })
 
-    -- Auto-reapply transparency whenever colorscheme changes
+    -- Auto-synchronize transparency whenever colorscheme changes
     local augroup = vim.api.nvim_create_augroup("DAGTransparency", { clear = true })
     vim.api.nvim_create_autocmd("ColorScheme", {
       group = augroup,
       callback = function()
-        if _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true then
-          M.enable()
-        end
+        M.apply_transparency()
       end,
     })
 
-    -- Initialize transparency from Bundle.state
-    local state = _G.Bundle and _G.Bundle.state or {}
-    if state.transparent == true then
-      M.enable()
-    else
-      M.disable()
-    end
+    -- Single unified boot initialization call
+    M.apply_transparency()
   end,
+  api = M,
 }
