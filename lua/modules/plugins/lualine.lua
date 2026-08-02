@@ -156,6 +156,7 @@ return {
                             hide_filename_extension = false,
                             show_modified_status = true,
                             mode = 0,
+                            padding = { left = 2, right = 2 },
                             max_length = function() return vim.o.columns * 3 / 4 end,
                             symbols = {
                                 modified = " ●",
@@ -172,6 +173,7 @@ return {
                         {
                             "tabs",
                             mode = 0,
+                            padding = { left = 2, right = 2 },
                             max_length = function() return vim.o.columns / 4 end,
                             tabs_color = {
                                 active = "TabLineSel",
