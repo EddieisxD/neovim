@@ -115,7 +115,7 @@ return {
             opts = {
                 options = {
                     theme = resolve_lualine_theme("catppuccin-mocha"),
-                    component_separators = { left = "│", right = "│" },
+                    component_separators = { left = "", right = "" },
                     section_separators = { left = "", right = "" },
                     globalstatus = true,
                 },
@@ -154,7 +154,15 @@ return {
                         },
                     },
                     lualine_z = {
-                        "tabs",
+                        {
+                            "tabs",
+                            mode = 0,
+                            max_length = function() return vim.o.columns / 4 end,
+                            tabs_color = {
+                                active = { fg = "#cdd6f4", bg = "#313244", gui = "bold" },
+                                inactive = { fg = "#6c7086", bg = "NONE" },
+                            },
+                        },
                         -- Right corner Normal-highlighted spacer for Ghostty terminal window padding color sampling
                         {
                             function() return " " end,
