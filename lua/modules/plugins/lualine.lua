@@ -130,7 +130,7 @@ return {
             opts = {
                 options = {
                     theme = "auto",
-                    component_separators = { left = "│", right = "│" },
+                    component_separators = { left = "|", right = "|" },
                     section_separators = { left = "", right = "" },
                     globalstatus = true,
                 },
@@ -167,6 +167,7 @@ return {
                                 active = "TabLineSel",
                                 inactive = "TabLine",
                             },
+                            separator = { left = "", right = "" },
                         },
                     },
                     lualine_z = {
@@ -179,6 +180,7 @@ return {
                                 active = "TabLineSel",
                                 inactive = "TabLine",
                             },
+                            separator = { left = "", right = "" },
                         },
                         -- Right corner Normal-highlighted spacer for Ghostty terminal window padding color sampling
                         {
