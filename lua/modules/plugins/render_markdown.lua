@@ -72,7 +72,13 @@ return {
       id = "render-markdown",
       ft = { "markdown" },
       deps = { "nvim-treesitter/nvim-treesitter" },
+      init = function()
+        vim.opt.conceallevel = 2
+        vim.opt.concealcursor = "nc"
+      end,
       opts = {
+        render_modes = { "n", "v", "i", "c" },
+        anti_conceal = { enabled = false },
         heading = { enabled = true },
         code = { enabled = true },
         checkbox = { enabled = true },
