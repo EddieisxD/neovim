@@ -58,6 +58,12 @@ function M.set_colorscheme(name)
       pcall(cat.setup, {
         flavour = flavour,
         transparent_background = is_trans,
+        custom_highlights = function(colors)
+          return {
+            TabLineSel = { fg = colors.mantle, bg = colors.mauve, style = { "bold" } },
+            TabLine = { fg = colors.surface1, bg = "none" },
+          }
+        end,
         integrations = {
           cmp = true,
           gitsigns = true,
@@ -128,6 +134,12 @@ return {
         flavour = "mocha",
         transparent_background = false,
         term_colors = true,
+        custom_highlights = function(colors)
+          return {
+            TabLineSel = { fg = colors.mantle, bg = colors.mauve, style = { "bold" } },
+            TabLine = { fg = colors.surface1, bg = "none" },
+          }
+        end,
         integrations = {
           cmp = true,
           gitsigns = true,

@@ -139,7 +139,7 @@ return {
             opts = {
                 options = {
                     theme = "auto",
-                    component_separators = { left = "|", right = "|" },
+                    component_separators = { left = "", right = "" },
                     section_separators = { left = "", right = "" },
                     globalstatus = true,
                 },
@@ -165,13 +165,31 @@ return {
                             hide_filename_extension = false,
                             show_modified_status = true,
                             mode = 0,
-                            padding = { left = 2, right = 2 },
+                            padding = { left = 1, right = 1 },
                             max_length = function() return vim.o.columns * 3 / 4 end,
                             symbols = {
                                 modified = " ●",
                                 alternate_file = "",
                                 directory = "",
                             },
+                            fmt = function(name, context)
+                                local is_last = context and context.last
+                                local is_current = context and context.current
+
+                                if is_current then
+                                    if is_last then
+                                        return " " .. name .. " "
+                                    else
+                                        return " " .. name .. " %#TabLine#│"
+                                    end
+                                else
+                                    if is_last then
+                                        return name
+                                    else
+                                        return name .. " │"
+                                    end
+                                end
+                            end,
                             buffers_color = {
                                 active = "TabLineSel",
                                 inactive = "TabLine",
@@ -183,7 +201,7 @@ return {
                         {
                             "tabs",
                             mode = 0,
-                            padding = { left = 2, right = 2 },
+                            padding = { left = 1, right = 1 },
                             max_length = function() return vim.o.columns / 4 end,
                             tabs_color = {
                                 active = "TabLineSel",
