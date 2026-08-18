@@ -125,6 +125,7 @@ return {
         {
             name = "nvim-lualine/lualine.nvim",
             id = "lualine",
+            enabled = not vim.g.vscode,
             deps = { "nvim-tree/nvim-web-devicons" },
             event = "VimEnter",
             opts = {
@@ -192,6 +193,7 @@ return {
                 },
             },
             config = function(_, opts)
+                if vim.g.vscode then return end
                 local ok, lualine = pcall(require, "lualine")
                 if ok then
                     local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"

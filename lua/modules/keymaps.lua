@@ -42,17 +42,19 @@ return {
     registry.bind("tab_prev", "tabprevious", "workbench.action.previousEditor")
 
     -- Move buffer from tab back into a split in the previous tab, then close current tab
-    set("n", "<leader>sm", function()
-      local cur_buf = vim.api.nvim_get_current_buf()
-      local num_tabs = vim.fn.tabpagenr("$")
-      if num_tabs > 1 then
-        vim.cmd("tabclose")
-        vim.cmd("vsplit")
-        vim.api.nvim_set_current_buf(cur_buf)
-      else
-        vim.cmd("vsplit")
-      end
-    end, { desc = "Move tab buffer back into a vertical split" })
+    if not vim.g.vscode then
+      set("n", "<leader>sm", function()
+        local cur_buf = vim.api.nvim_get_current_buf()
+        local num_tabs = vim.fn.tabpagenr("$")
+        if num_tabs > 1 then
+          vim.cmd("tabclose")
+          vim.cmd("vsplit")
+          vim.api.nvim_set_current_buf(cur_buf)
+        else
+          vim.cmd("vsplit")
+        end
+      end, { desc = "Move tab buffer back into a vertical split" })
+    end
 
     registry.bind("close_buffer", function()
       local bufnr = vim.api.nvim_get_current_buf()
@@ -69,38 +71,37 @@ return {
       end
     end, "workbench.action.closeActiveEditor")
 
-    -- LSP Navigation & Gotos (Explicit bindings for gd, gD, gr, gi, <leader>ca)
-    set("n", "gd", vim.lsp.buf.definition, { desc = "LSP: Go to Definition / Open Wikilink Note" })
-    set("n", "gD", vim.lsp.buf.declaration, { desc = "LSP: Go to Declaration" })
-    set("n", "gi", vim.lsp.buf.implementation, { desc = "LSP: Go to Implementation" })
-    set("n", "gr", vim.lsp.buf.references, { desc = "LSP: Go to References / Vault Backlinks" })
-    set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP: Code Actions / Quickfixes" })
+    -- LSP Navigation & Gotos (Explicit bindings for gd, gD, gr, gi, <leader>ca, <leader>rn)
+    registry.bind("lsp_definition", vim.lsp.buf.definition, "editor.action.revealDefinition")
+    registry.bind("lsp_declaration", vim.lsp.buf.declaration, "editor.action.revealDeclaration")
+    registry.bind("lsp_implementation", vim.lsp.buf.implementation, "editor.action.goToImplementation")
+    registry.bind("lsp_references", vim.lsp.buf.references, "editor.action.goToReferences")
+    registry.bind("lsp_hover", function() vim.lsp.buf.hover({ border = "rounded" }) end, "editor.action.showHover")
+    registry.bind("lsp_code_action", vim.lsp.buf.code_action, "editor.action.quickFix", { "n", "x" })
+    registry.bind("lsp_rename", vim.lsp.buf.rename, "editor.action.rename")
 
-    -- Open LSP definition / wikilink in vertical split
-    set("n", "<C-w>gd", function()
-      vim.cmd("vsplit")
-      vim.lsp.buf.definition()
-    end, { desc = "LSP: Open Definition / Wikilink in Vertical Split" })
-
-    -- LSP Hover Window (K) - Displays signatures & markdown docs for built-in and custom functions
-    set("n", "K", function()
-      vim.lsp.buf.hover({ border = "rounded" })
-    end, { desc = "LSP Hover Documentation & Function Signatures" })
+    -- Open LSP definition in vertical split
+    if not vim.g.vscode then
+      set("n", "<C-w>gd", function()
+        vim.cmd("vsplit")
+        vim.lsp.buf.definition()
+      end, { desc = "LSP: Open Definition in Vertical Split" })
+    end
 
     -- Floating LSP / Linter Diagnostics Keymaps (with explicit source tags)
     local function open_floating_diagnostic()
       vim.diagnostic.open_float({ border = "rounded", scope = "line", source = "always" })
     end
 
-    set("n", "<leader>cd", open_floating_diagnostic, { desc = "Open floating LSP diagnostic" })
+    registry.bind("diag_float", open_floating_diagnostic, "editor.action.showHover")
     set("n", "gl", open_floating_diagnostic, { desc = "Open floating LSP diagnostic" })
-    set("n", "]d", function() vim.diagnostic.goto_next({ float = true }) end, { desc = "Next LSP diagnostic" })
-    set("n", "[d", function() vim.diagnostic.goto_prev({ float = true }) end, { desc = "Previous LSP diagnostic" })
+    registry.bind("diag_next", function() vim.diagnostic.goto_next({ float = true }) end, "editor.action.marker.next")
+    registry.bind("diag_prev", function() vim.diagnostic.goto_prev({ float = true }) end, "editor.action.marker.prev")
 
     -- Directional Window Navigation (<C-h/j/k/l>)
-    set("n", "<C-h>", "<C-w>h", { desc = "Focus left window split" })
-    set("n", "<C-j>", "<C-w>j", { desc = "Focus lower window split" })
-    set("n", "<C-k>", "<C-w>k", { desc = "Focus upper window split" })
-    set("n", "<C-l>", "<C-w>l", { desc = "Focus right window split" })
+    registry.bind("win_left", "<C-w>h", "workbench.action.navigateLeft")
+    registry.bind("win_down", "<C-w>j", "workbench.action.navigateDown")
+    registry.bind("win_up", "<C-w>k", "workbench.action.navigateUp")
+    registry.bind("win_right", "<C-w>l", "workbench.action.navigateRight")
   end,
 }

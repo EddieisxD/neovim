@@ -10,6 +10,7 @@ return {
       name = "folke/which-key.nvim",
       nix_name = "which-key-nvim",
       id = "which-key",
+      enabled = not vim.g.vscode,
       event = "VeryLazy",
       keys = {
         { "<leader>wK", "<cmd>WhichKey<CR>", desc = "WhichKey all keymaps" },
@@ -26,6 +27,7 @@ return {
         win = { border = "rounded" },
       },
       config = function(_, opts)
+        if vim.g.vscode then return end
         local ok, wk = pcall(require, "which-key")
         if ok then
           wk.setup(opts or {})

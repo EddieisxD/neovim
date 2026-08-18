@@ -10,7 +10,7 @@ local function is_kitty()
 end
 
 local function set_kitty_padding(padding_val, margin_val)
-  if not is_kitty() then return false end
+  if not is_kitty() or vim.g.vscode then return false end
 
   local listen_socket = os.getenv("KITTY_LISTEN_ON")
 
@@ -44,7 +44,7 @@ return {
       _G.Bundle.bridge.set_terminal_padding = set_kitty_padding
     end
 
-    if not is_kitty() then return end
+    if not is_kitty() or vim.g.vscode then return end
 
     -- Apply Neovim internal gutter padding options
     vim.opt.signcolumn = "yes"

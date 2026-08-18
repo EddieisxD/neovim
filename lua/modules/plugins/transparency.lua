@@ -37,6 +37,7 @@ local all_groups = {
 
 --- Single factored-out function that applies or clears transparency based on Bundle.state.transparent
 function M.apply_transparency()
+  if vim.g.vscode then return end
   local is_trans = _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true
 
   if is_trans then
@@ -109,6 +110,8 @@ return {
   phase = dag_lib.Phases.POST,
   deps = { "colorscheme" },
   exec = function()
+    if vim.g.vscode then return end
+
     -- User Commands
     vim.api.nvim_create_user_command("ToggleTransparency", function()
       M.toggle()

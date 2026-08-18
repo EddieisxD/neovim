@@ -11,6 +11,7 @@ return {
     {
       name = "stevearc/oil.nvim",
       id = "oil",
+      enabled = not vim.g.vscode,
       cmd = { "Oil" },
       keys = {
         { "-", "<cmd>Oil<CR>", desc = "Open parent directory in Oil file editor" },
@@ -52,6 +53,7 @@ return {
         },
       },
       config = function(_, opts)
+        if vim.g.vscode then return end
         local ok, oil = pcall(require, "oil")
         if ok then
           oil.setup(opts)
@@ -60,6 +62,7 @@ return {
     },
   },
   exec = function()
+    if vim.g.vscode then return end
     vim.api.nvim_create_user_command("OilExplorer", function()
       pcall(vim.cmd, "Oil")
     end, { desc = "Open editable buffer file explorer" })

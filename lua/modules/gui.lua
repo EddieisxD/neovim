@@ -37,12 +37,6 @@ return {
       -- Disable conflicting TUI options when embedded in VSCode
       vim.opt.cmdheight = 1
       vim.opt.laststatus = 0
-
-      -- VSCode keybinding bridges
-      local set = vim.keymap.set
-      set("n", "<leader>ff", "<cmd>call VSCodeNotify('workbench.action.quickOpen')<CR>", { desc = "VSCode Quick Open" })
-      set("n", "<leader>fw", "<cmd>call VSCodeNotify('workbench.action.findInFiles')<CR>", { desc = "VSCode Search in Files" })
-      set("n", "<leader>e", "<cmd>call VSCodeNotify('workbench.action.toggleSidebarVisibility')<CR>", { desc = "VSCode Toggle Sidebar" })
     end
   end,
 }

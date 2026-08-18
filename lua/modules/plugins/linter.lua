@@ -13,6 +13,7 @@ return {
       name = "mfussenegger/nvim-lint",
       id = "lint",
       nix_name = "nvim-lint",
+      enabled = not vim.g.vscode,
       event = { "BufReadPost", "BufWritePost" },
       cmd = { "Lint", "Linter" },
       opts = {
@@ -27,6 +28,7 @@ return {
         },
       },
       config = function(_, opts)
+        if vim.g.vscode then return end
         local ok, lint = pcall(require, "lint")
         if ok then
           lint.linters_by_ft = opts.linters_by_ft or {}
@@ -47,6 +49,7 @@ return {
   },
 
   exec = function()
+    if vim.g.vscode then return end
     -- Register on Bundle bridge so any component can invoke linting without tight coupling
     if _G.Bundle and _G.Bundle.bridge then
       _G.Bundle.bridge.lint = function()

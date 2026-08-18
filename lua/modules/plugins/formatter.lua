@@ -7,12 +7,13 @@ local logger = require("library.logger")
 return {
   id = "formatter",
   phase = dag_lib.Phases.PLUGINS,
-  deps = { "options" },
+  deps = { "options", "keymap_registry" },
   specs = {
     {
       name = "stevearc/conform.nvim",
       id = "conform",
       nix_name = "conform-nvim",
+      enabled = not vim.g.vscode,
       event = { "BufWritePre" },
       cmd = { "ConformInfo", "Format", "Formatter" },
       keys = {
@@ -53,6 +54,7 @@ return {
         end,
       },
       config = function(_, opts)
+        if vim.g.vscode then return end
         local ok, conform = pcall(require, "conform")
         if ok then
           conform.setup(opts or {})
@@ -61,6 +63,16 @@ return {
     },
   },
   exec = function()
+    local registry = require("modules.keymap_registry").api
+    registry.bind("format_buffer", function()
+      local ok, conform = pcall(require, "conform")
+      if ok then
+        conform.format({ async = true, lsp_fallback = true })
+      end
+    end, "editor.action.formatDocument")
+
+    if vim.g.vscode then return end
+
     -- Register on Bundle bridge so any component can trigger formatting
     if _G.Bundle and _G.Bundle.bridge then
       _G.Bundle.bridge.format = function(bufnr)

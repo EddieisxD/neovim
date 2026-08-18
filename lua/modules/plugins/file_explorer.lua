@@ -20,6 +20,7 @@ return {
     {
       name = "nvim-tree/nvim-tree.lua",
       id = "nvim-tree",
+      enabled = not vim.g.vscode,
       deps = { "nvim-tree/nvim-web-devicons" },
       cmd = { "NvimTreeToggle", "NvimTreeFocus", "NvimTreeFindFile" },
 
@@ -51,6 +52,7 @@ return {
       },
 
       config = function(_, opts)
+        if vim.g.vscode then return end
         local ok, tree = pcall(require, "nvim-tree")
         if ok then
           tree.setup(opts or {})
@@ -62,14 +64,12 @@ return {
             callback = make_nvimtree_borderless,
           })
         end
-
-        if vim.g.vscode then
-          local registry = require("modules.keymap_registry").api
-          registry.bind("toggle_tree", nil, "workbench.action.toggleSidebarVisibility")
-          registry.bind("focus_tree", nil, "workbench.files.action.focusFilesExplorer")
-        end
       end,
     },
   },
-  exec = function() end,
+  exec = function()
+    local registry = require("modules.keymap_registry").api
+    registry.bind("toggle_tree", "NvimTreeToggle", "workbench.action.toggleSidebarVisibility")
+    registry.bind("focus_tree", "NvimTreeFocus", "workbench.files.action.focusFilesExplorer")
+  end,
 }

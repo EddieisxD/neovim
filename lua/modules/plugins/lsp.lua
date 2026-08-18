@@ -72,6 +72,7 @@ local active_servers = {}
 
 --- Scan $PATH for available LSP executables and configure them dynamically
 local function scan_and_enable_servers()
+  if vim.g.vscode then return end
   local newly_enabled = 0
 
   for _, s in ipairs(known_servers) do
@@ -124,8 +125,10 @@ return {
     {
       name = "neovim/nvim-lspconfig",
       id = "nvim-lspconfig",
+      enabled = not vim.g.vscode,
       event = { "BufReadPre", "BufNewFile" },
       config = function()
+        if vim.g.vscode then return end
         scan_and_enable_servers()
 
         -- Dynamic :Daily command for markdown_oxide LSP
@@ -146,6 +149,7 @@ return {
   },
 
   exec = function()
+    if vim.g.vscode then return end
     -- Initial environment scan
     scan_and_enable_servers()
 

@@ -34,6 +34,7 @@ M.curated_themes = {
 --- Safely apply a colorscheme with fallback to default
 ---@param name string Colorscheme name
 function M.set_colorscheme(name)
+  if vim.g.vscode then return true end
   name = (name and name ~= "") and name or M.default_scheme
 
   local is_trans = _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true
@@ -98,6 +99,7 @@ return {
       name = "catppuccin/nvim",
       id = "catppuccin",
       nix_name = "catppuccin-nvim",
+      enabled = not vim.g.vscode,
       lazy = false,
       priority = 1000,
       opts = {
@@ -123,6 +125,7 @@ return {
         },
       },
       config = function(_, opts)
+        if vim.g.vscode then return end
         local ok, catppuccin = pcall(require, "catppuccin")
         if ok then
           local is_trans = _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true
@@ -134,15 +137,17 @@ return {
         M.set_colorscheme(scheme)
       end,
     },
-    { name = "sainnhe/gruvbox-material", id = "gruvbox-material", nix_name = "gruvbox-material", lazy = true },
-    { name = "rebelot/kanagawa.nvim", id = "kanagawa", nix_name = "kanagawa-nvim", lazy = true },
-    { name = "EdenEast/nightfox.nvim", id = "nightfox", nix_name = "nightfox-nvim", lazy = true },
-    { name = "dgox16/oldworld.nvim", id = "oldworld", nix_name = "oldworld-nvim", lazy = true },
-    { name = "nyoom-engineering/oxocarbon.nvim", id = "oxocarbon", nix_name = "oxocarbon-nvim", lazy = true },
-    { name = "vague26/vague.nvim", id = "vague", nix_name = "vague-nvim", lazy = true },
+    { name = "sainnhe/gruvbox-material", id = "gruvbox-material", nix_name = "gruvbox-material", enabled = not vim.g.vscode, lazy = true },
+    { name = "rebelot/kanagawa.nvim", id = "kanagawa", nix_name = "kanagawa-nvim", enabled = not vim.g.vscode, lazy = true },
+    { name = "EdenEast/nightfox.nvim", id = "nightfox", nix_name = "nightfox-nvim", enabled = not vim.g.vscode, lazy = true },
+    { name = "dgox16/oldworld.nvim", id = "oldworld", nix_name = "oldworld-nvim", enabled = not vim.g.vscode, lazy = true },
+    { name = "nyoom-engineering/oxocarbon.nvim", id = "oxocarbon", nix_name = "oxocarbon-nvim", enabled = not vim.g.vscode, lazy = true },
+    { name = "vague26/vague.nvim", id = "vague", nix_name = "vague-nvim", enabled = not vim.g.vscode, lazy = true },
   },
 
   exec = function()
+    if vim.g.vscode then return end
+
     -- Custom completion function for :Theme and :Colorscheme that prioritizes curated downloaded themes
     local function theme_completion(arg_lead, _, _)
       local matches = {}

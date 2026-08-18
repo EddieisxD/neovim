@@ -11,6 +11,7 @@ return {
     {
       name = "j-hui/fidget.nvim",
       id = "fidget",
+      enabled = not vim.g.vscode,
       lazy = false,
       priority = 90,
       event = { "VimEnter", "LspAttach" },
@@ -26,6 +27,7 @@ return {
         },
       },
       config = function(_, opts)
+        if vim.g.vscode then return end
         local ok, fidget = pcall(require, "fidget")
         if ok then
           fidget.setup(opts or {})

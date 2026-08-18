@@ -11,6 +11,7 @@ return {
         {
             name = "nvim-telescope/telescope.nvim",
             id = "telescope",
+            enabled = not vim.g.vscode,
             lazy = false,
             priority = 80,
             deps = { "nvim-lua/plenary.nvim" },
@@ -27,6 +28,7 @@ return {
             },
 
             config = function()
+                if vim.g.vscode then return end
                 local ok, telescope = pcall(require, "telescope")
                 if not ok then return end
 
@@ -55,15 +57,13 @@ return {
                         },
                     },
                 })
-
-                if vim.g.vscode then
-                    local registry = require("modules.keymap_registry").api
-                    registry.bind("find_files", nil, "workbench.action.quickOpen")
-                    registry.bind("live_grep", nil, "workbench.action.findInFiles")
-                    registry.bind("find_buffers", nil, "workbench.action.showAllEditors")
-                end
             end,
         },
     },
-    exec = function() end,
+    exec = function()
+        local registry = require("modules.keymap_registry").api
+        registry.bind("find_files", "Telescope find_files", "workbench.action.quickOpen")
+        registry.bind("live_grep", "Telescope live_grep", "workbench.action.findInFiles")
+        registry.bind("find_buffers", "Telescope buffers", "workbench.action.showAllEditors")
+    end,
 }

@@ -6,12 +6,13 @@ local dag_lib = require("library.dag")
 return {
   id = "dap",
   phase = dag_lib.Phases.PLUGINS,
-  deps = { "options" },
+  deps = { "options", "keymap_registry" },
   specs = {
     {
       name = "mfussenegger/nvim-dap",
       id = "dap",
       nix_name = "nvim-dap",
+      enabled = not vim.g.vscode,
       cmd = { "DapToggleBreakpoint", "DapContinue", "Dap" },
       keys = {
         { "<leader>db", function() local ok, dap = pcall(require, "dap") if ok then dap.toggle_breakpoint() end end, desc = "Toggle DAP Breakpoint" },
@@ -24,6 +25,7 @@ return {
         "nvim-neotest/nvim-nio",
       },
       config = function()
+        if vim.g.vscode then return end
         local ok_dap, dap = pcall(require, "dap")
         local ok_dapui, dapui = pcall(require, "dapui")
         local ok_vt, vt = pcall(require, "nvim-dap-virtual-text")
@@ -47,6 +49,24 @@ return {
   },
 
   exec = function()
+    local registry = require("modules.keymap_registry").api
+    registry.bind("toggle_bp", function()
+      local ok, dap = pcall(require, "dap")
+      if ok then dap.toggle_breakpoint() end
+    end, "workbench.action.debug.toggleBreakpoint")
+
+    registry.bind("continue_dap", function()
+      local ok, dap = pcall(require, "dap")
+      if ok then dap.continue() end
+    end, "workbench.action.debug.start")
+
+    registry.bind("toggle_dap_ui", function()
+      local ok, dapui = pcall(require, "dapui")
+      if ok then dapui.toggle() end
+    end, "workbench.view.debug")
+
+    if vim.g.vscode then return end
+
     -- Unified :Dap <subcommand> [adapter_name] command suite
     local dap_subcommands = { "enable", "disable", "toggle", "start", "toggle_breakpoint", "ui_toggle", "info" }
     local available_adapters = { "codelldb", "python", "go" }
