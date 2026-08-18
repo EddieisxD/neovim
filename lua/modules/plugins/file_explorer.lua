@@ -12,6 +12,18 @@ local function make_nvimtree_borderless()
   vim.api.nvim_set_hl(0, "NvimTreeVertSplit", { fg = bg_val, bg = bg_val })
 end
 
+--- Toggle focus between NvimTree and active editing buffer
+local function toggle_explorer_focus()
+  local cur_buf = vim.api.nvim_get_current_buf()
+  local ft = vim.bo[cur_buf].filetype
+
+  if ft == "NvimTree" then
+    vim.cmd("wincmd p")
+  else
+    pcall(vim.cmd, "NvimTreeFocus")
+  end
+end
+
 return {
   id = "file_explorer",
   phase = dag_lib.Phases.PLUGINS,
@@ -26,7 +38,7 @@ return {
 
       keys = {
         { "<C-b>",      "<cmd>NvimTreeToggle<CR>", desc = "Toggle primary sidebar / explorer" },
-        { "<leader>e",  "<cmd>NvimTreeFocus<CR>",  desc = "Focus file explorer" },
+        { "<leader>e",  toggle_explorer_focus,     desc = "Toggle focus between buffer and explorer" },
       },
 
       opts = {
@@ -70,6 +82,6 @@ return {
   exec = function()
     local registry = require("modules.keymap_registry").api
     registry.bind("toggle_sidebar", "NvimTreeToggle", "workbench.action.toggleSidebarVisibility")
-    registry.bind("focus_tree", "NvimTreeFocus", "workbench.files.action.focusFilesExplorer")
+    registry.bind("focus_tree", toggle_explorer_focus, "workbench.files.action.focusFilesExplorer")
   end,
 }

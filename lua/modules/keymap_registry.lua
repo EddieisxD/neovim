@@ -6,15 +6,33 @@ local dag_lib = require("library.dag")
 
 local M = {}
 
---- Helper to safely execute a VSCode action
+--- Helper to safely execute a VSCode action with multi-adapter fallback
 local function vscode_action(action_id)
   local ok, vscode = pcall(require, "vscode")
   if ok and vscode and type(vscode.action) == "function" then
     vscode.action(action_id)
+    return
+  end
+
+  local ok_vn, vn = pcall(require, "vscode-neovim")
+  if ok_vn and vn then
+    if type(vn.action) == "function" then
+      vn.action(action_id)
+      return
+    elseif type(vn.call) == "function" then
+      vn.call(action_id)
+      return
+    end
+  end
+
+  if vim.fn.exists("*VSCodeNotify") == 1 then
+    pcall(vim.fn.VSCodeNotify, action_id)
   else
     pcall(vim.cmd, "call VSCodeNotify('" .. action_id .. "')")
   end
 end
+
+M.vscode_action = vscode_action
 
 --- Centralized Keymap Registry Table
 M.registry = {
@@ -27,7 +45,7 @@ M.registry = {
 
   -- File Explorer & Sidebar Navigation
   toggle_sidebar = { key = "<C-b>",      desc = "Toggle primary sidebar / explorer" },
-  focus_tree     = { key = "<leader>e",  desc = "Focus file explorer" },
+  focus_tree     = { key = "<leader>e",  desc = "Toggle focus between buffer and explorer" },
   find_files     = { key = "<leader>ff", desc = "Find files" },
   live_grep      = { key = "<leader>fw", desc = "Live grep search" },
   find_buffers   = { key = "<leader>fb", desc = "Find open buffers" },
@@ -73,7 +91,7 @@ M.registry = {
 --- Bind a semantic keymap action dynamically based on runtime environment (TUI / Neovide vs VSCode)
 ---@param action_name string Key name in M.registry
 ---@param tui_target string|function Command string or Lua function for TUI / Neovide
----@param vscode_action_id? string Optional VSCode action ID for VSCode environment
+---@param vscode_action_id? string|function Optional VSCode action ID or handler for VSCode environment
 ---@param modes? string|table Mode string or table (default: "n")
 function M.bind(action_name, tui_target, vscode_action_id, modes)
   local item = M.registry[action_name]
@@ -81,7 +99,9 @@ function M.bind(action_name, tui_target, vscode_action_id, modes)
   modes = modes or "n"
 
   if vim.g.vscode then
-    if vscode_action_id then
+    if type(vscode_action_id) == "function" then
+      vim.keymap.set(modes, item.key, vscode_action_id, { desc = item.desc })
+    elseif type(vscode_action_id) == "string" then
       vim.keymap.set(modes, item.key, function()
         vscode_action(vscode_action_id)
       end, { desc = item.desc })
@@ -105,7 +125,7 @@ return {
       M.bind("close_buffer",      nil, "workbench.action.closeActiveEditor")
       M.bind("next_buffer",       nil, "workbench.action.nextEditor")
       M.bind("prev_buffer",       nil, "workbench.action.previousEditor")
-      M.bind("toggle_sidebar",    nil, "workbench.action.toggleSidebarVisibility")
+      M.bind("toggle_sidebar",    nil, "workbench.action.toggleSidebarVisibility", { "n", "x" })
       M.bind("focus_tree",        nil, "workbench.files.action.focusFilesExplorer")
       M.bind("find_files",        nil, "workbench.action.quickOpen")
       M.bind("live_grep",         nil, "workbench.action.findInFiles")
