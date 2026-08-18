@@ -140,6 +140,7 @@ return {
       desc = "Unified Formatter Suite (:Formatter enable|disable|toggle|format|info)",
     })
 
-    vim.cmd("cabbrev formatter Formatter")
+    -- Safe command-position abbreviation
+    vim.cmd([[cabbrev <expr> formatter (getcmdtype() == ':' && getcmdline() ==# 'formatter') ? 'Formatter' : 'formatter']])
   end,
 }

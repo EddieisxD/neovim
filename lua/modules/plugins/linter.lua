@@ -123,6 +123,7 @@ return {
       desc = "Unified Linter Suite (:Linter enable|disable|toggle|lint|info)",
     })
 
-    vim.cmd("cabbrev linter Linter")
+    -- Safe command-position abbreviation
+    vim.cmd([[cabbrev <expr> linter (getcmdtype() == ':' && getcmdline() ==# 'linter') ? 'Linter' : 'linter']])
   end,
 }

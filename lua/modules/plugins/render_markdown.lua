@@ -21,6 +21,9 @@ end
 --- Paste image from system clipboard (wl-paste / xclip / pngpaste) into ./assets/ and insert link
 local function paste_image_from_clipboard()
   local cwd = vim.fn.expand("%:p:h")
+  if not cwd or cwd == "" then
+    cwd = vim.fn.getcwd()
+  end
   local assets_dir = cwd .. "/assets"
   if vim.fn.isdirectory(assets_dir) == 0 then
     vim.fn.mkdir(assets_dir, "p")
@@ -70,12 +73,8 @@ return {
     {
       name = "MeanderingProgrammer/render-markdown.nvim",
       id = "render-markdown",
-      ft = { "markdown" },
+      ft = { "markdown", "quarto" },
       deps = { "nvim-treesitter/nvim-treesitter" },
-      init = function()
-        vim.opt.conceallevel = 2
-        vim.opt.concealcursor = "nc"
-      end,
       opts = {
         render_modes = { "n", "v", "i", "c" },
         anti_conceal = { enabled = false },
@@ -89,6 +88,17 @@ return {
       config = function(_, opts)
         local ok, rm = pcall(require, "render-markdown")
         if ok then rm.setup(opts) end
+
+        -- Set conceallevel and concealcursor buffer-locally for markdown files
+        local augroup = vim.api.nvim_create_augroup("RenderMarkdownConceal", { clear = true })
+        vim.api.nvim_create_autocmd("FileType", {
+          group = augroup,
+          pattern = { "markdown", "quarto" },
+          callback = function()
+            vim.opt_local.conceallevel = 2
+            vim.opt_local.concealcursor = "nc"
+          end,
+        })
 
         -- PKM Keybindings for Markdown files
         local set = vim.keymap.set

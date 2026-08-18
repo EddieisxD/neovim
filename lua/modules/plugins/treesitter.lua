@@ -66,15 +66,12 @@ return {
         end
 
         local function treesitter_try_attach(buf, language)
-          if not (vim.treesitter.language and vim.treesitter.language.add) or not vim.treesitter.language.add(language) then
-            return false
-          end
-
-          pcall(vim.treesitter.start, buf, language)
-          vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-          vim.wo.foldmethod = "expr"
+          local ok = pcall(vim.treesitter.start, buf, language)
+          if not ok then return false end
+          vim.wo[0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+          vim.wo[0].foldmethod = "expr"
           vim.o.foldlevel = 99
-          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
           return true
         end
 

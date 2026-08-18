@@ -130,7 +130,8 @@ return {
     opt.spelloptions:append("camel")
     opt.spellfile = vim.fn.expand("~/.config/nvim/dictionary.utf-8.add")
 
-    vim.cmd("cabbrev h tab help")
+    -- Safe command-position abbreviation
+    vim.cmd([[cabbrev <expr> h (getcmdtype() == ':' && getcmdline() ==# 'h') ? 'tab help' : 'h']])
 
     -- Line Number Toggle Keybindings with State Persistence
     vim.keymap.set("n", "<leader>n", function()

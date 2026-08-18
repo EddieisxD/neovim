@@ -1,6 +1,6 @@
 --- Kitty Terminal Remote Control Integration
 --- Applies top padding to create a gap above the top bufferline,
---- applies internal Neovim gutter padding, and restores default Kitty padding/margin on exit.
+--- and restores default Kitty padding/margin on exit.
 
 local dag_lib = require("library.dag")
 local logger = require("library.logger")
@@ -45,10 +45,6 @@ return {
     end
 
     if not is_kitty() or vim.g.vscode then return end
-
-    -- Apply Neovim internal gutter padding options
-    vim.opt.signcolumn = "yes"
-    vim.opt.foldcolumn = "1"
 
     -- Apply 12px top window padding gap above the top bufferline
     local augroup = vim.api.nvim_create_augroup("KittyTerminalPadding", { clear = true })

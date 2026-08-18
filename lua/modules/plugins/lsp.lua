@@ -69,6 +69,7 @@ local known_servers = {
 }
 
 local active_servers = {}
+local disabled_servers = {}
 
 --- Scan $PATH for available LSP executables and configure them dynamically
 local function scan_and_enable_servers()
@@ -76,7 +77,7 @@ local function scan_and_enable_servers()
   local newly_enabled = 0
 
   for _, s in ipairs(known_servers) do
-    if not active_servers[s.name] and vim.fn.executable(s.bin) == 1 then
+    if not disabled_servers[s.name] and not active_servers[s.name] and vim.fn.executable(s.bin) == 1 then
       local auto = s.auto_start ~= false
       local server_cmd = s.cmd or { s.bin }
 
@@ -197,37 +198,45 @@ return {
         end
       elseif sub == "restart" then
         if name then
+          disabled_servers[name] = nil
           local clients = vim.lsp.get_clients({ name = name })
           for _, c in ipairs(clients) do
             c:stop()
           end
           pcall(vim.lsp.enable, name)
         else
+          disabled_servers = {}
           pcall(vim.cmd, "LspRestart")
         end
       elseif sub == "stop" or sub == "disable" then
         if name then
+          disabled_servers[name] = true
+          active_servers[name] = nil
           local clients = vim.lsp.get_clients({ name = name })
           for _, c in ipairs(clients) do
             c:stop()
           end
-          active_servers[name] = nil
-          vim.notify("Stopped LSP: " .. name, vim.log.levels.INFO, { title = "LSP" })
+          vim.notify("Stopped and disabled LSP: " .. name, vim.log.levels.INFO, { title = "LSP" })
         else
+          for _, s in ipairs(known_servers) do
+            disabled_servers[s.name] = true
+          end
           for _, c in ipairs(vim.lsp.get_clients()) do
             c:stop()
           end
           active_servers = {}
-          vim.notify("Stopped all LSP clients", vim.log.levels.INFO, { title = "LSP" })
+          vim.notify("Stopped and disabled all LSP clients", vim.log.levels.INFO, { title = "LSP" })
         end
       elseif sub == "start" or sub == "enable" then
         if name then
+          disabled_servers[name] = nil
           active_servers[name] = true
           if vim.lsp and vim.lsp.enable then
             pcall(vim.lsp.enable, name)
           end
           vim.notify("Enabled LSP: " .. name, vim.log.levels.INFO, { title = "LSP" })
         else
+          disabled_servers = {}
           scan_and_enable_servers()
         end
       end
@@ -237,12 +246,20 @@ return {
       desc = "Unified LSP Management Suite (:Lsp enable|disable|restart|stop|start|info <name>)",
     })
 
-    vim.cmd("cabbrev lsp Lsp")
+    -- Safe command-position abbreviation
+    vim.cmd([[cabbrev <expr> lsp (getcmdtype() == ':' && getcmdline() ==# 'lsp') ? 'Lsp' : 'lsp']])
 
-    -- Auto-rescan environment on direnv reload or directory change
+    -- Auto-rescan environment on direnv reload, DirenvLoaded event, or directory change
     local augroup = vim.api.nvim_create_augroup("LspEnvironmentScanner", { clear = true })
     vim.api.nvim_create_autocmd({ "DirChanged", "BufReadPost" }, {
       group = augroup,
+      callback = function()
+        scan_and_enable_servers()
+      end,
+    })
+    vim.api.nvim_create_autocmd("User", {
+      group = augroup,
+      pattern = "DirenvLoaded",
       callback = function()
         scan_and_enable_servers()
       end,

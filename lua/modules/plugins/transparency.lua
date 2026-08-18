@@ -47,11 +47,14 @@ function M.apply_transparency()
     vim.api.nvim_set_hl(0, "MsgArea", { bg = "none" })
     logger.info("[Transparency Engine] Applied UI transparency (bg = none)")
   else
-    for _, g in ipairs(all_groups) do
-      pcall(vim.cmd, "hi clear " .. g)
+    -- Re-apply colorscheme highlights cleanly to restore solid backgrounds without stripping foreground styles
+    local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
+    local ok_cs, cs_mod = pcall(require, "modules.plugins.colorscheme")
+    if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
+      cs_mod.api.set_colorscheme(scheme)
     end
     vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
-    logger.info("[Transparency Engine] Cleared transparency overrides (solid backgrounds restored)")
+    logger.info("[Transparency Engine] Restored solid colorscheme backgrounds")
   end
 end
 
@@ -78,15 +81,10 @@ function M.disable()
     _G.Bundle:save_state()
   end
 
-  local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
-  local ok_cs, cs_mod = pcall(require, "modules.plugins.colorscheme")
-  if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
-    cs_mod.api.set_colorscheme(scheme)
-  end
-
   M.apply_transparency()
 
   -- Refresh Lualine theme non-destructively
+  local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
   local ok_l, lualine_inst = pcall(require, "lualine")
   if ok_l and type(lualine_inst.set_theme) == "function" then
     pcall(lualine_inst.set_theme, scheme)

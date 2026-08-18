@@ -54,6 +54,8 @@ local function sync_direnv(target_dir, verbose, force)
             end
           end
           last_synced_dir = env_dir
+          -- Emit decoupled User DirenvLoaded event so dependent systems (LSP scanner, Lualine) update reactively
+          pcall(vim.api.nvim_exec_autocmds, "User", { pattern = "DirenvLoaded" })
         end
       end
 
@@ -153,6 +155,7 @@ return {
       end
     end, { desc = "Show direnv status for current CWD" })
 
-    vim.cmd("cabbrev direnv DirenvStatus")
+    -- Safe command-position abbreviation
+    vim.cmd([[cabbrev <expr> direnv (getcmdtype() == ':' && getcmdline() ==# 'direnv') ? 'DirenvStatus' : 'direnv']])
   end,
 }

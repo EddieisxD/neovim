@@ -124,6 +124,7 @@ return {
       desc = "Unified DAP Suite (:Dap enable|disable|toggle|start|toggle_breakpoint|ui_toggle|info)",
     })
 
-    vim.cmd("cabbrev dap Dap")
+    -- Safe command-position abbreviation
+    vim.cmd([[cabbrev <expr> dap (getcmdtype() == ':' && getcmdline() ==# 'dap') ? 'Dap' : 'dap']])
   end,
 }

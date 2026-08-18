@@ -57,6 +57,14 @@ local function root_dir_display()
     return "󰉋 " .. folder
 end
 
+local exe_cache = {}
+local function is_executable(bin)
+    if exe_cache[bin] == nil then
+        exe_cache[bin] = (vim.fn.executable(bin) == 1)
+    end
+    return exe_cache[bin]
+end
+
 local function active_tools_status()
     local buf = vim.api.nvim_get_current_buf()
     local ft = vim.bo[buf].filetype
@@ -72,7 +80,7 @@ local function active_tools_status()
         table.insert(parts, "󰅡 " .. table.concat(lsp_names, ","))
     end
 
-    -- Active Formatters on $PATH
+    -- Active Formatters on $PATH (memoized)
     local formatters = {
         lua      = { "stylua" },
         nix      = { "nixfmt", "alejandra" },
@@ -88,7 +96,7 @@ local function active_tools_status()
     }
     local fmt_names = {}
     for _, f in ipairs(formatters[ft] or {}) do
-        if vim.fn.executable(f) == 1 then
+        if is_executable(f) then
             table.insert(fmt_names, f)
         end
     end
@@ -96,7 +104,7 @@ local function active_tools_status()
         table.insert(parts, "󰉁 " .. table.concat(fmt_names, ","))
     end
 
-    -- Active Linters on $PATH
+    -- Active Linters on $PATH (memoized)
     local linters = {
         nix    = { "statix", "deadnix" },
         sh     = { "shellcheck" },
@@ -106,7 +114,7 @@ local function active_tools_status()
     }
     local lnt_names = {}
     for _, l in ipairs(linters[ft] or {}) do
-        if vim.fn.executable(l) == 1 then
+        if is_executable(l) then
             table.insert(lnt_names, l)
         end
     end
@@ -214,6 +222,15 @@ return {
                             opts.options.theme = resolve_lualine_theme(scheme)
                             pcall(lualine_inst.setup, opts)
                         end
+                    end,
+                })
+
+                -- Invalidate executable cache on DirChanged or DirenvLoaded
+                vim.api.nvim_create_autocmd({ "DirChanged", "User" }, {
+                    group = augroup,
+                    pattern = { "*", "DirenvLoaded" },
+                    callback = function()
+                        exe_cache = {}
                     end,
                 })
             end,
