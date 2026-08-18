@@ -38,4 +38,10 @@ This documentation suite consolidates, verifies, and enhances all notes, archite
 ### 6. [`06-master-keybindings-guide.md`](file:///home/addy/.config/nvim/documentation/06-master-keybindings-guide.md)
 - **Unified Master Keybindings Reference**:
   - Vim Motions, Gotos (`gd`, `gD`, `gr`, `gi`), Jumps, Folds, Marks, Paragraphs, Text Objects.
-  - Grouped plugin keybinds for LSP (`K`, `<leader>ca`, `<leader>rn`), Diagnostics (`gl`, `]d`, `[d`), Formatter (`<leader>fm`), Linter (`:linter`), Debugger (`<leader>db`, `<leader>dc`, `<leader>du`), Telescope (`<leader>ff`, `<leader>fw`, `<A-x>`), NvimTree (`<C-n>`, `<leader>e`), and Windows (`<leader>x`, `<C-h/j/k/l>`).
+  - Grouped plugin keybinds for LSP (`K`, `<leader>ca`, `<leader>rn`), Diagnostics (`gl`, `]d`, `[d`), Formatter (`<leader>fm`), Linter (`:linter`), Debugger (`<leader>db`, `<leader>dc`, `<leader>du`), Telescope (`<leader>ff`, `<leader>fw`, `<A-x>`), NvimTree (`<leader>b`, `<leader>e`), and Windows (`<leader>x`, `<C-h/j/k/l>`).
+
+### 7. [`07-cross-editor-unified-keybindings-architecture.md`](file:///home/addy/.config/nvim/documentation/07-cross-editor-unified-keybindings-architecture.md)
+- **Cross-Editor Mnemonic Standard (Neovim, VSCode, Zed)**:
+  - 2-stroke mnemonic hierarchy (`f`=find, `b`=sidebar/buffer, `c`=code/lsp, `s`=splits, `d`=debugger).
+  - Complete master comparison table across Standalone Neovim, VSCode Neovim, and Zed Editor.
+  - Ready-to-use JSON blueprints for VSCode `keybindings.json` and Zed `keymap.json`.

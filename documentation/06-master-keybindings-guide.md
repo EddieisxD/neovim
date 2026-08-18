@@ -4,11 +4,11 @@ This document is the unified master reference for all keybindings across Neovim 
 
 ---
 
-## ⌨️ 1. File Explorer (`NvimTree` & `Oil.nvim`)
+## ⌨️ 1. File Explorer & Sidebar Navigation (`NvimTree` & `Oil.nvim`)
 | Keybind | Action | Description |
 | :--- | :--- | :--- |
-| **`<C-n>`** | `NvimTreeToggle` | Toggle NvimTree sidebar window |
-| **`<leader>e`** | `NvimTreeFocus` | Focus cursor inside NvimTree |
+| **`<leader>b`** | `NvimTreeToggle` / `toggleSidebarVisibility` | Toggle primary sidebar / explorer |
+| **`<leader>e`** | `NvimTreeFocus` / `toggle_focus` | Toggle focus between editor buffer and file explorer |
 | **`-`** | `Oil` | Open parent directory in Oil editable buffer file explorer |
 
 ---
@@ -17,7 +17,7 @@ This document is the unified master reference for all keybindings across Neovim 
 | Keybind | Action | Description |
 | :--- | :--- | :--- |
 | **`<leader>ff`** | `Telescope find_files` | Search files by name in CWD |
-| **`<leader>fw`** | `Telescope live_grep` | Search text inside files (ripgrep) |
+| **`<leader>fw`** / **`<leader>fg`** | `Telescope live_grep` | Search text inside files (ripgrep) |
 | **`<leader>fb`** | `Telescope buffers` | List active open buffers |
 | **`<A-x>`** or **`<leader>c`** | `Telescope commands` | Doom Emacs style M-x command palette |
 | **`<leader>fh`** | `Telescope help_tags` | Search Neovim help documentation |
