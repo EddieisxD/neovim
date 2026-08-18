@@ -25,7 +25,7 @@ return {
       cmd = { "NvimTreeToggle", "NvimTreeFocus", "NvimTreeFindFile" },
 
       keys = {
-        { "<C-n>",      "<cmd>NvimTreeToggle<CR>", desc = "Toggle file explorer" },
+        { "<C-b>",      "<cmd>NvimTreeToggle<CR>", desc = "Toggle primary sidebar / explorer" },
         { "<leader>e",  "<cmd>NvimTreeFocus<CR>",  desc = "Focus file explorer" },
       },
 
@@ -69,7 +69,7 @@ return {
   },
   exec = function()
     local registry = require("modules.keymap_registry").api
-    registry.bind("toggle_tree", "NvimTreeToggle", "workbench.action.toggleSidebarVisibility")
+    registry.bind("toggle_sidebar", "NvimTreeToggle", "workbench.action.toggleSidebarVisibility")
     registry.bind("focus_tree", "NvimTreeFocus", "workbench.files.action.focusFilesExplorer")
   end,
 }

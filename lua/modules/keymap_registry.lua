@@ -25,12 +25,12 @@ M.registry = {
   save_file     = { key = "<leader>w",   desc = "Save file" },
   quit          = { key = "<leader>q",   desc = "Quit window / editor" },
 
-  -- File Explorer & Navigation
-  toggle_tree   = { key = "<C-n>",       desc = "Toggle file explorer" },
-  focus_tree    = { key = "<leader>e",   desc = "Focus file explorer" },
-  find_files    = { key = "<leader>ff",  desc = "Find files" },
-  live_grep     = { key = "<leader>fw",  desc = "Live grep search" },
-  find_buffers  = { key = "<leader>fb",  desc = "Find open buffers" },
+  -- File Explorer & Sidebar Navigation
+  toggle_sidebar = { key = "<C-b>",      desc = "Toggle primary sidebar / explorer" },
+  focus_tree     = { key = "<leader>e",  desc = "Focus file explorer" },
+  find_files     = { key = "<leader>ff", desc = "Find files" },
+  live_grep      = { key = "<leader>fw", desc = "Live grep search" },
+  find_buffers   = { key = "<leader>fb", desc = "Find open buffers" },
 
   -- Formatting & Tooling
   format_buffer = { key = "<leader>fm",  desc = "Format current buffer" },
@@ -105,7 +105,7 @@ return {
       M.bind("close_buffer",      nil, "workbench.action.closeActiveEditor")
       M.bind("next_buffer",       nil, "workbench.action.nextEditor")
       M.bind("prev_buffer",       nil, "workbench.action.previousEditor")
-      M.bind("toggle_tree",       nil, "workbench.action.toggleSidebarVisibility")
+      M.bind("toggle_sidebar",    nil, "workbench.action.toggleSidebarVisibility")
       M.bind("focus_tree",        nil, "workbench.files.action.focusFilesExplorer")
       M.bind("find_files",        nil, "workbench.action.quickOpen")
       M.bind("live_grep",         nil, "workbench.action.findInFiles")
