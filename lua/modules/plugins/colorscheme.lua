@@ -31,7 +31,7 @@ M.curated_themes = {
   "oldworld",
 }
 
---- Safely apply a colorscheme with fallback to default
+--- Safely apply a colorscheme with lazy loading and fallback to default
 ---@param name string Colorscheme name
 function M.set_colorscheme(name)
   if vim.g.vscode then return true end
@@ -40,8 +40,17 @@ function M.set_colorscheme(name)
   local is_trans = _G.Bundle and _G.Bundle.state and _G.Bundle.state.transparent == true
   local ok = false
 
+  -- Helper to ensure plugin is loaded via lazy.nvim
+  local function ensure_plugin_loaded(plugin_name)
+    local ok_lazy, lazy = pcall(require, "lazy")
+    if ok_lazy and lazy.load then
+      pcall(lazy.load, { plugins = { plugin_name } })
+    end
+  end
+
   -- Catppuccin Flavours
   if name:match("^catppuccin") then
+    ensure_plugin_loaded("nvim")
     local ok_cat, cat = pcall(require, "catppuccin")
     if ok_cat then
       local flavour = name:gsub("^catppuccin%-", "")
@@ -65,23 +74,36 @@ function M.set_colorscheme(name)
     end
   end
 
-  -- Fallback to standard vim.cmd.colorscheme if not loaded via catppuccin API
+  -- Lazy load respective theme plugin before executing vim.cmd.colorscheme
   if not ok then
+    if name:match("^kanagawa") then
+      ensure_plugin_loaded("kanagawa.nvim")
+    elseif name:match("fox$") then
+      ensure_plugin_loaded("nightfox.nvim")
+    elseif name:match("^gruvbox") then
+      ensure_plugin_loaded("gruvbox-material")
+    elseif name:match("^oxocarbon") then
+      ensure_plugin_loaded("oxocarbon.nvim")
+    elseif name:match("^vague") then
+      ensure_plugin_loaded("vague.nvim")
+    elseif name:match("^oldworld") then
+      ensure_plugin_loaded("oldworld.nvim")
+    end
+
     ok = pcall(vim.cmd.colorscheme, name)
     if ok then
       vim.g.colors_name = name
     end
   end
 
+  -- Fallback to default scheme
   if not ok then
     logger.warn(string.format("[Colorscheme Module] Theme '%s' failed to load, falling back to '%s'", name, M.default_scheme))
     pcall(vim.cmd.colorscheme, M.default_scheme)
     vim.g.colors_name = M.default_scheme
   end
 
-  -- Trigger ColorScheme autocommands natively via Neovim API so transparency & lualine update reactively
-  pcall(vim.api.nvim_exec_autocmds, "ColorScheme", { pattern = vim.g.colors_name })
-
+  -- Note: vim.cmd.colorscheme already triggers ColorScheme event internally in Neovim.
   logger.info(string.format("[Colorscheme Module] Applied theme '%s'", vim.g.colors_name))
   if _G.Bundle then
     _G.Bundle.state.colorscheme = vim.g.colors_name
@@ -176,7 +198,7 @@ return {
       desc = "Apply curated colorscheme / theme",
     })
 
-    vim.cmd("cabbrev theme Theme")
+    vim.cmd("cabbrev <expr> theme (getcmdtype() == ':' && getcmdline() ==# 'theme') ? 'Theme' : 'theme'")
 
     -- Expose API on Bundle bridge
     if _G.Bundle and _G.Bundle.bridge then

@@ -47,14 +47,8 @@ function M.apply_transparency()
     vim.api.nvim_set_hl(0, "MsgArea", { bg = "none" })
     logger.info("[Transparency Engine] Applied UI transparency (bg = none)")
   else
-    -- Re-apply colorscheme highlights cleanly to restore solid backgrounds without stripping foreground styles
-    local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
-    local ok_cs, cs_mod = pcall(require, "modules.plugins.colorscheme")
-    if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
-      cs_mod.api.set_colorscheme(scheme)
-    end
     vim.api.nvim_set_hl(0, "MsgArea", { link = "Normal" })
-    logger.info("[Transparency Engine] Restored solid colorscheme backgrounds")
+    logger.info("[Transparency Engine] Solid colorscheme backgrounds active")
   end
 end
 
@@ -69,9 +63,9 @@ function M.enable()
   local ok_cs, cs_mod = pcall(require, "modules.plugins.colorscheme")
   if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
     cs_mod.api.set_colorscheme(scheme)
+  else
+    M.apply_transparency()
   end
-
-  M.apply_transparency()
 end
 
 --- Disable transparency state, persist to disk, and restore solid theme
@@ -81,10 +75,15 @@ function M.disable()
     _G.Bundle:save_state()
   end
 
-  M.apply_transparency()
+  local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
+  local ok_cs, cs_mod = pcall(require, "modules.plugins.colorscheme")
+  if ok_cs and cs_mod.api and type(cs_mod.api.set_colorscheme) == "function" then
+    cs_mod.api.set_colorscheme(scheme)
+  else
+    M.apply_transparency()
+  end
 
   -- Refresh Lualine theme non-destructively
-  local scheme = (_G.Bundle and _G.Bundle.state and _G.Bundle.state.colorscheme) or vim.g.colors_name or "catppuccin-mocha"
   local ok_l, lualine_inst = pcall(require, "lualine")
   if ok_l and type(lualine_inst.set_theme) == "function" then
     pcall(lualine_inst.set_theme, scheme)
