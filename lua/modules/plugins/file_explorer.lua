@@ -37,7 +37,7 @@ return {
       cmd = { "NvimTreeToggle", "NvimTreeFocus", "NvimTreeFindFile" },
 
       keys = {
-        { "<C-b>",      "<cmd>NvimTreeToggle<CR>", desc = "Toggle primary sidebar / explorer" },
+        { "<leader>b",  "<cmd>NvimTreeToggle<CR>", desc = "Toggle primary sidebar / explorer" },
         { "<leader>e",  toggle_explorer_focus,     desc = "Toggle focus between buffer and explorer" },
       },
 

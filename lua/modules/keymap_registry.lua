@@ -44,7 +44,7 @@ M.registry = {
   quit          = { key = "<leader>q",   desc = "Quit window / editor" },
 
   -- File Explorer & Sidebar Navigation
-  toggle_sidebar = { key = "<C-b>",      desc = "Toggle primary sidebar / explorer" },
+  toggle_sidebar = { key = "<leader>b",  desc = "Toggle primary sidebar / explorer" },
   focus_tree     = { key = "<leader>e",  desc = "Toggle focus between buffer and explorer" },
   find_files     = { key = "<leader>ff", desc = "Find files" },
   live_grep      = { key = "<leader>fw", desc = "Live grep search" },
