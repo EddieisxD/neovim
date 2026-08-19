@@ -165,7 +165,7 @@ return {
                             hide_filename_extension = false,
                             show_modified_status = true,
                             mode = 0,
-                            padding = { left = 1, right = 1 },
+                            padding = { left = 1, right = 0 },
                             max_length = function() return vim.o.columns * 3 / 4 end,
                             symbols = {
                                 modified = " ●",
@@ -175,20 +175,9 @@ return {
                             fmt = function(name, context)
                                 local is_last = context and context.last
                                 local is_current = context and context.current
+                                local divider = is_last and "" or (is_current and "%#TabLine#│" or "│")
 
-                                if is_current then
-                                    if is_last then
-                                        return " " .. name .. " "
-                                    else
-                                        return " " .. name .. " %#TabLine#│"
-                                    end
-                                else
-                                    if is_last then
-                                        return name
-                                    else
-                                        return name .. " │"
-                                    end
-                                end
+                                return name .. " " .. divider
                             end,
                             buffers_color = {
                                 active = "TabLineSel",
